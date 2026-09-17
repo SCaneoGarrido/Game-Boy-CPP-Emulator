@@ -11,19 +11,19 @@ caben dentro de los 32kb de ram.
 
 Clase MemoryBus {
     Privado:
-        bytes wram[8192] 8 KIB ram 
-	bytes vram[8192] 8 KIb vram
-	bytes oam[160] 160 bytes para almacenar datos del objeto 
-	bytes hram[127] 127bytes del silicio	
+        bytes wram[8192]        8 KIB ram 
+	      bytes vram[8192]        8 KIb vram
+	      bytes oam[160]          160 bytes para almacenar datos del objeto 
+	      bytes hram[127]         127bytes del silicio	
 
-	bytes interrupt_enable; // 1 byte en 0xFFFF
+	      bytes interrupt_enable; // 1 byte en 0xFFFF
 
-	bytes vector cartridge_rom; // Arreglo de 32kb para el cartucho del juego
-	puntero_inteligente cartridge_mbc; // nos indica que MBC usaremos dependiendo del juego
+	      bytes vector cartridge_rom; // Arreglo de 32kb para el cartucho del juego
+	      puntero_inteligente cartridge_mbc; // nos indica que MBC usaremos dependiendo del juego
 
     Público:
 	
-	Metodo load_rom(vector de 8 bits con los datos de la rom) // carga el juego en memoria del bus
+	      Metodo load_rom(vector de 8 bits con los datos de la rom) // carga el juego en memoria del bus
         Método read(dirección_16bits) -> devuelve byte {
             devolver memoria_plana[dirección_16bits]
         }
@@ -36,6 +36,8 @@ Clase MemoryBus {
 
 
 
+
+esto lo dejo para otro momento ya que complica el desarrollo actual.
 =============== Clase Interfaz IMBC =========================
 // IMBC.h - Interfaz independiente para cualquier controlador de banco
 #ifndef I_MBC_H
