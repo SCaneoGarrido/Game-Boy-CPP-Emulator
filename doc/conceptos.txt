@@ -1,0 +1,44 @@
+=========================================== Conceptos ================================
+
+RAM (random-access memory): Memoria de tipo volatil la cual cada vez que el sistema es 
+			    apagado todo los almacenado dentro desaparece. 
+
+ROM (read-only memory): es una memoria permamente que almacena intrucciones escenciales
+    	 		para el inicio.
+
+Program Counter: 	Registro especial del CPU que almacena la direccion de memoria de la 
+			siguiente instruccion a ser ejecutada.
+
+LIFO (Last-In, First-Out): 	El último plato que pones en la pila es obligatoriamente 
+				el primero que tienes que quitar.
+
+
+
+Stack (Pila): Region de memoria RAM dedicada a guardaar datos de manera temporal. 
+	      Funciona como una Pila de datos, donde funciona con "LIFO" y tiene
+	      operaciones basicas de Push (Empujar) donde se coloca un dato encima
+	      y tenemos Pop (Sacar) donde se quita el dato que esta en la cima de 
+	      la pila. 
+ 
+Stack Pointer: Pequeño contenedor de memoria ultra rapido que almacena la direccion 
+		de memoria de donde esta la cima actual del stack.
+		
+		* Si haces un Push, el CPU reserva espacio en el stack y el Stack Pointer se mueve (se actualiza) 
+		  para apuntar al nuevo dato.
+		
+		* Si haces un Pop, el CPU saca el dato y el Stack Pointer se mueve hacia atrás, 
+		  apuntando al elemento que quedó abajo. 
+
+T-Cycle (Clock Cycle / Ciclo re reloj):
+		Es la velocidad del oscilador de cristal de la consola. La Game Boy 
+		clásica funcion a '4,194,304hz' (~4.19MHz)
+
+M-Cycle (Machine Cycle / Ciclo de maquina):
+		Es el tiempo minimo que le toma al procesador de realizar una operacion
+		basica, como leer o escribir un byte. El procesador funciona a 
+		'1,048,576Hz' (~1.05MHz)
+
+Relacion matematica entre T-Cycles y M-Cycles: 
+		La relacion matematica es fija y simple.
+		1 M-Cycle equivale a 4 T-Cycles.
+

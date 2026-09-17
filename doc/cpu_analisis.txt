@@ -1,0 +1,144 @@
+================================================== GAMEBOY PROCESADOR SPECS ======================================
+Descripción: 
+	CPU de 8-BITS similar en arquitectura a Intel 8080 o Zilog Z80
+
+1.- Topologia de variables
+	Tiene 8 registros de 8-bits (A,B,C,D,E,F,H,L) los cuales pueden ser 
+	pareados para obtener 4 registros de 16-bits (AF,BC,DE,HL) los cuales
+	se usan comunmente para operaciones matematicas de 16-bits y accesos 
+	de memoria, ademas de punteros de 16-bits para el seguimiento de la memoria activa 
+	PC y SP.
+	
+	|16-bit	|Hi|	|Lo|	|Name/Function          |
+	------------------------------------------------ 
+	|AF	|A |	|- |	|Accumulator & Flags   	|
+	|BC	|B |	|C |	|BC			|
+	|DE	|D |	|E |	|DE			|
+	|HL	|H |	|L | 	|HL			|
+	|SP	|- |	|- |	|Stack Pointer		|
+	|PC	|- |	|- |	|Program Counter/Pointer| 
+ 
+	El registro F es accesible de manera indirecta por el programador
+	y es usado para almacenar varios resultados de operaciones matematicas.
+	
+		
+	Ejemplo:
+		Se toman los 8 bits menos significativos de la intruccion AF
+
+		* A - (8 bits MAS SIGNFICATIVOS / higher 8 bits)
+		* F - (8 bits MENOS SIGNIFICATIVOS / lower 8 bits)
+	
+		dentro de ese registro F se debe aplicar el siguiente mapa o tabla.
+	
+	Bit	Name	Explanation
+	7	z	Zero flag 		- ¿operacion resultado 0?
+	6	n	Subtraction flag (BCD) 	- ¿operacion anterior fue resta ? 
+	5	h	Half Carry flag (BCD)  	- ¿hubo deboradmiento del bit 3 al 4? 
+	4	c	Carry flag		- ¿hubo desbordamiento en el bit 7?
+	
+	Desglose: 
+		Zero Flag (Z): 
+			Se asigna este bit cuando el resultado de una operacion
+			matematica es cero, o cuando dos valores coinciden usando
+			la instruccion de CP.
+		Substract Flag (N):
+			Este bit se asigna si una resta fue ejecutada en la ultima
+			instruccion matematica.
+		Half Carry flag (H):
+			Este bit se asigna si un acarreo ocurrio desde el nibble
+			menos significativo en la ultma operacion matematica.
+		Carry Flag (C):
+			Este bit se asigna si un acarreo ocurrio desde la ultima
+			operacion matematica o si el registro A es el valor mas
+			pequeño cuando se ejecuta una instruccion CP.
+	
+	Program Counter (PC):
+		Al encender la gameboy el PC es inicializado a "$100" (100 hex) y 
+		la instruccion encontrada en esa direccion de la ROM es ejecutada. 
+
+2.- El bucle (Fetch - Decode - Execute)
+	El corazón del CPU es un bicle infinito que se ejecuta de manera secuencial
+	hasta que el mismo sistema lo frene.
+
+	 ┌──────────────┐      ┌────────────────┐      ┌─────────────────┐
+	 │    Fetch     │ ───> │     Decode     │ ───> │     Execute     │
+ 	 └──────────────┘      └────────────────┘      └─────────────────┘
+  	Lee un byte en  	Decodifica el 		Altera registros/
+	memory[PC] e   		opcode para 		memoria e incrementa
+	incrementa PC.          identificar la   	pc acordemente (si aplica).
+				operacion.       
+	Fetch: 
+		El emulador lee un byte alojado en la direccion actual que 
+		apunte el program counter (PC) de una matriz de memoria
+		unificada.
+	Decode:
+		El opcode leido se mapea directamente a alguna instruccion
+		definida en una matriz programatica como switch o match.
+	Execute:
+		El emulador ejecuta la logica asocioada a la instruccion.
+		alterando los registros o valores correspondientes y en
+		algunos casos altera el PC.
+	
+
+
+3.- Set de instrucciones del CPU
+	El primer bite de cada operaciones es llamado tipicamente como
+	"opcode"
+
+
+	|---------------------------------------------------------------------
+	|	|0	|1	|2	|3	|4	|5	|6	|7
+	|r8	|b	|c	|d	|e	|h	|l	|[hl]	|a
+	|r16	|bc	|de	|hl	|sp	
+	|r16stk	|bc	|de	|hl	|af	
+	|r16mem	|bc	|de	|hl+	|hl-	
+	|cond	|nz	|z	|nc	|c	
+	|b3	|A 3-bit bit index
+	|tgt3	|rst's target address, divided by 8
+	|imm8	|The following byte
+	|imm16	|The following two bytes, in little-endian order
+	|---------------------------------------------------------------------
+
+Leemos lo siguiente "ld b, 42" esto en un lenguaje que la CPU entiende seria
+[byte] [byte] el primer byte dice que opreacion debemos hacer y a veces que 
+registros debemos usar, el segundo byte puede contener el valor que la instruccion
+necesita. En resumen el primer byte es el "opcode" y el segundo byte es el 
+"operand".
+
+Ejemplo con r8:
+	Para "r8" segun la tabla tenemos 8 operandos asocioados (b,c,d,e,h,l,[hl],a)
+	esto nos quiere decir que tenemos 8 posibilidades por ejemplo;
+	ld    r8   , r8     si se desglosa esto tenemos lo siguiente - 0 1 | Dest (r8) | Source (r8)
+	2bits 3bits  3bits  ahora sabemos que cuanto vale cada parte de la instruccion, para contrastarlo con la tabla vemos:
+	0 1   000  , 001    el ultimo bit nos dice que elemento de la tabla usamos, tenemos 000 este segun la tabla de la fila r8
+	debe de usar "b", el 001 segun la tabla sera "c" por ende nos quedaria de la siguiente forma: "ld b, c"
+
+
+
+
+4.- Cycle Timing (M-Cycle & T-Cycles):
+	El Game Boy maneja el acceso a la memoria (BUS DE DATOS) sincronizado con los M-Cycles
+	cada acceso a la memoria, ya sea leer un opcode, leer un parametros o escribir un datos
+	toma exactamente 1 M-Cycle es decir "4 T-Cycles".
+
+	Ejemplo instruccion LD A, d8 (0x3E)
+	* Esta instruccion carga un valor inmediato de 8 bits en el registro A	
+	
+	* Paso 1: El Fetch del Opcode (Primer M-Cycle) El PC (Program Counter) está apuntando, por ejemplo, 
+		a la dirección 0x150. Tu emulador hace opcode = read_memory(PC); (Lee 0x3E).
+		Avanzas el puntero: PC++ (Ahora PC es 0x151).
+		Aquí ya se consumió 1 M-Cycle automáticamente solo por tocar la memoria.
+	* Paso 2: El DecodeEntra al switch(opcode).
+		Cae en el case 0x3E:.
+		Tu emulador ya sabe que 0x3E mapea a la instrucción mnemónica LD A, imm8.
+		Esto es puramente lógico dentro del procesador del computador/móvil donde corre el emulador; 
+		toma 0 ciclos de la Game Boy.
+	* Paso 3: El "Pedido" de datos y Ejecución (Segundo M-Cycle)
+		Como el case 0x3E sabe que necesita un dato inmediato de 8 bits (d8), 
+		la lógica de ese case hace lo siguiente: Vuelve a leer la memoria en la posición actual del mapa: 
+		uint8_t valor = read_memory(PC); (Lee el byte que quiere el juego, por ejemplo, 0xFF).
+		Avanzas el puntero otra vez: PC++ (Ahora PC es 0x152, quedando listo para la siguiente 
+		instrucción del juego). Ejecución: Asignas el valor al registro
+
+
+ 
