@@ -1,0 +1,11 @@
+Presiona <Space> gg (la barra espaciadora seguida de la letra g dos veces). Esto abrirá la interfaz de LazyGit.
+
+Preparar cambios (Stage): Muévete con las flechas o j/k hasta la sección de archivos (Files). 
+
+Presiona la tecla Space sobre el archivo que quieras agregar (equivalente a git add). Si quieres agregar todo, presiona a.
+
+Hacer el Commit: Presiona la letra c. Se abrirá una pequeña ventana para que escribas el mensaje de tu commit. Escríbelo y presiona Enter.
+
+Enviar (Push): Presiona la letra P (en mayúscula, es decir, Shift + p). Esto ejecutará el git push hacia tu repositorio remoto.
+
+Salir: Presiona q para cerrar la interfaz de LazyGit y volver a tu código
