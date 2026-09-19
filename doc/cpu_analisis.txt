@@ -142,3 +142,95 @@ Ejemplo con r8:
 
 
  
+======================================================= DISEÑO DE ALGORITMO DECODE ================================================================
+Para la decodificacione de los 256 opcodes posibles del GameBoy, utilizaremos una estrategia que mezcla "Tabla de punteros" y "Templates".
+lo primero es definir un "Puntero de metodo miembro" a la CPU, con esto los metodos de la clase CPU serán accesible mediante punteros.
+
+	*using InstructionFunc = int (CPU::*)();*
+
+Tambien deberemos definir una tabla en la cabecera del CPU "CPU.h" esta tabla sera un arreglo plano de 256 posicion de tipo "InstructionFunc", 
+debera estar declarado dentro de la clase CPU y acada posicion del arreglo podrá almacenar la direccion de cualquier metodo privado que cumpla
+una firma.
+
+	
+	Arreglo `opcode_table` de 256 posiciones:
+	┌──────────────┬──────────────┬──────────────┬───┬──────────────┐
+	│  Índice 0x00 │  Índice 0x01 │  Índice 0x02 │...│  Índice 0xFF │
+	├──────────────┼──────────────┼──────────────┼───┼──────────────┤
+	│  &CPU::b_nop │ &CPU::b_ld...│  &CPU::b_... │...│  &CPU::b_... │
+	└──────────────┴──────────────┴──────────────┴───┴──────────────┘
+
+Agregar seguridad ante fallos en caso de que un opcode no sea implementado es importante poner una funcion de seguridad en caso de que un 
+opcode no haya sido implementado.
+	* int b_illegal_opcode();
+
+Para usar la proteccion ante fallos, en el momento de instanciar la clase CPU, es decir en el constructor hay que mapear cada posicion de la 
+tabla desde 0 a 255 apuntando al metodo "b_illegal_opcode", una vez hecho eso todas las posiciones del arreglo tendra la proteccion del opcode
+no implementado.
+
+Mapear los primeros opcodes reales iremos posicion por posicion asignando los templates que queramos usar para abarcar la mayor cantidad de 
+opcodes con la menor cantidad de codigo. 
+
+    opcode_table[0x00] = &CPU::b_nop;
+    // Aquí es donde meteremos los templates en el siguiente paso...
+
+El metodo "b_illegal_opcode" debe cumplir los siguientes criterios:
+	1. Imprimir en pantalla un mensaje de error: "¡Opcode no implementado!"
+	2. Mostrar el valor hexadecimal de `current_opcode` y la dirección actual del `PC`.
+	3. Forzar la salida del programa (ej: `std::exit(1)`) o lanzar una excepción para detener la ejecución.
+	4. Retornar 0 (aunque el programa ya se habrá detenido).
+======================================================== Logica de FLAGS ================================================================
+Para manejar la logica de los flags, necesito declarar como constantes las mascaras de BIT que usare para obtener el bit necesario del registro
+F, recuerda que los ultimos 3 bits del registro siempre será en 0.
+
+Declaramos las mascaras de bit para cada FLAG:
+	
+	Constante FLAG_Z = 0x80 -> 1000 0000
+	Constante FLAG_N = 0x40 -> 0100 0000
+	Constante FLAG_H = 0x20 -> 0010 0000
+	Constante FLAG_C = 0x10 -> 0001 0000
+
+* nota: el orden de los bits se lee de izquierda a derecha, por ende desglozando esta logica quedaria de la siguiente forma:
+	 Posición del Bit:   Bit 7   Bit 6   Bit 5   Bit 4   Bit 3   Bit 2   Bit 1   Bit 0
+	 Nombre del Flag:   [  Z  ] [  N  ] [  H  ] [  C  ] [  0  ] [  0  ] [  0  ] [  0  ]
+ 	       	            └──┬──┘ └──┬──┘ └──┬──┘ └──┬──┘ └─────────────────┬─────────────┘
+ 	                       │       │       │       │                      │
+	 Valor Hexadecimal:   0x80    0x40    0x20    0x10               Siempre fijos en 0
+
+para esto debo definir 3 metodos para establecer las logicas para cada accion del registro F con las flags z,n,h,c
+lo primero es poder hacer un set a una flag, estos metodos será usados a conveniencia cuando se programe la logica 
+de alguna instruccion de opcode.
+
+Metodo setFlag:
+	Recibe como parametro una mascara de bits de 8 bits, aplica una operacion bitwise "OR" al registro F.
+		* F = F | mascara_flag
+	Tambien debe hacer un filtro obligatorio donde mantendra los 3-0 bits en 0.
+		* F = | 0xF0 
+	Ejemplo si F vale 0x00 y necesito encender la flag Z (0x80):
+		* 0000 0000 (F) | 1000 0000 (mascara_z) = 1000 0000 (0x80) 
+Metodo clearFlag:
+	* Recibe como parametro la mascara a aplicar, invierte la mascara con la opreacion NOT "~" y luego 
+	  aplica una AND "&" para forzar ese bit a 0.
+	  
+		// Invertimos los bits de la máscara (los 1 se vuelven 0, los 0 se vuelven 1)
+    		* máscara_invertida = NOT máscara_flag
+    
+    		// Aplicamos AND para apagar exclusivamente el bit deseado
+    		* F = F AND máscara_invertida
+    
+    		// Filtro obligatorio por seguridad
+   		* F = F AND 0xF0
+	Ejemplo: si F vale 1001 0000 aqui tengo la flag Z y C encendida, quiero apagar C aplico la mascara 
+		 (0x10). NOT 0001 0000 eso nos entrega lo siguiente; 1110 1111 y entonces aplico el bitwise 
+		 1001 0000  & 1110 1111 = 1000 0000, aqui el bit 4 se apago y el bit 7 quedo encendido.
+
+Metodo getFlag:
+	  Devuelve un valor booleando (Verdadero o Falso) indicando si el flag esta encendido, aislando el bit
+	  usando un AND directo, tambien debe recibir la mascara.
+	  
+          bit_aislado = F & mascara_flag
+
+	  si bit_aislado no es cero:
+		devolver verdadero
+	  sino:
+		devolver falso.

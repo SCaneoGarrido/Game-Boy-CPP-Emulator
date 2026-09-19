@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(DMGEmulator CXX)
 
-add_executable(DMGE)
+add_executable(DMGE 
+  main.cpp
+  src/CPU.cpp
+  src/MemoryBus.cpp
+  utils/FileUtils.cpp
+)
