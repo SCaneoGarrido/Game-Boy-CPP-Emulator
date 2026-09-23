@@ -77,6 +77,5 @@ std::uint8_t BUS::read(std::uint16_t address) {
 void BUS::write(std::uint16_t address, std::uint8_t value) {
   std::cout << "Writing in: " << std::hex << address << std::endl;
   std::cout << "Value: " << std::hex << value << std::endl;
-
-  // Terminar la logica de escritura de este metodo.
+  // QUEDA PENDIENTE HASTA TENER MAS COMPONETNES QUE LO USEN.
 }

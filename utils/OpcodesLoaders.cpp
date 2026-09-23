@@ -74,3 +74,17 @@ void OpcodeLoaders::load_ld_8bits_block(CPU &cpu) {
   cpu.opcode_table[0x22] = &CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 1>;  // (HL+)
   cpu.opcode_table[0x32] = &CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 2>;  // (HL-)
 }
+
+
+void OpcodeLoaders::load_ld_INC_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE INC r8.
+  // ===========================================================================
+  cpu.opcode_table[0x04] = &CPU::op_INC_r8<&CPU::B>; // INC B
+  cpu.opcode_table[0x0C] = &CPU::op_INC_r8<&CPU::C>; // INC C
+  cpu.opcode_table[0x14] = &CPU::op_INC_r8<&CPU::D>; // INC D
+  cpu.opcode_table[0x1C] = &CPU::op_INC_r8<&CPU::E>; // INC E
+  cpu.opcode_table[0x24] = &CPU::op_INC_r8<&CPU::H>; // INC H
+  cpu.opcode_table[0x2C] = &CPU::op_INC_r8<&CPU::L>; // INC L
+  cpu.opcode_table[0x3C] = &CPU::op_INC_r8<&CPU::A>; // INC A
+}

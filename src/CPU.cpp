@@ -6,17 +6,21 @@
 #include <ios>
 #include <iostream>
 
+
 CPU::CPU(BUS &_bus) : bus(_bus) {
   initCpu();
   for (int i = 0; i <= 255; i++) {
     opcode_table[i] = &CPU::b_illegal_opcode;
   }
-
-  loadOpcodes();
+    loadOpcodes();
 };
 
 CPU::~CPU() {};
 
+
+const CPU::Reg8Ptr CPU::mapa_registros[8] = {
+    &CPU::B, &CPU::C, &CPU::D, &CPU::E, &CPU::H, &CPU::L, nullptr, &CPU::A
+};
 
 void CPU::cpuCycle() {
   // 1. FETCH (Búsqueda) - Esto SÍ lo está haciendo bien
@@ -40,19 +44,11 @@ void CPU::initCpu() {
 }
 
 void CPU::loadOpcodes() {
-  // Instruccion NOP
   opcode_table[0x00] = &CPU::b_nop;
-  // Instruccion STOP
   // opcode_table[0x10] = &CPU::b_stop;
   OpcodeLoaders::load_ld_8bits_block(*this);
   // opcode_table[0x76] = &CPU::b_halt;
-}
-
-void CPU::fetchOpcode() {
-  current_opcode = bus.read(PC);
-  std::cout << "Opcode Obtenido: " << std::hex
-            << static_cast<int>(current_opcode) << std::endl;
-  PC++;
+  OpcodeLoaders::load_ld_INC_block(*this);
 }
 
 int CPU::b_illegal_opcode() {

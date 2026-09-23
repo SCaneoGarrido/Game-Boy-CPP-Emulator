@@ -1,11 +1,6 @@
 #include "../include/CPU.h"
 #include <cstdint>
 
-// mapa de registros.
-static std::uint8_t CPU::* const mapa_registros[] = {
-    &CPU::B, &CPU::C, &CPU::D, &CPU::E, &CPU::H, &CPU::L, nullptr, &CPU::A
-};
-
 // ========================= Instruccion LD_r8_imm8 ===============================
 template <std::uint8_t CPU::*registro_destino>
 int CPU::op_ld_r8_imm8() {
