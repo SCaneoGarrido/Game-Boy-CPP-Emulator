@@ -28,7 +28,7 @@ void CPU::cpuCycle() {
   // 2. DECODE (Decodificación)
   InstructionFunc funcion = opcode_table[current_opcode];
 
-  // 3. EXECUTE (Ejecución) - ¡¡ESTA LÍNEA DE ABAJO FALTA O NO SE ESTÁ DISPARANDO!!
+  // 3. EXECUTE (Ejecución)
   (this->*funcion)(); 
 }
 
