@@ -14,9 +14,9 @@ private:
   std::uint8_t IE;
   // Componentes de la boot room
   std::uint8_t boot_rom[256];
-  bool boot_rom_enable;
+  bool bios_mapped;
   std::uint8_t reg_ff0;
-  
+  void clearArrays(); 
 public:
   BUS();
   ~BUS();
@@ -25,7 +25,7 @@ public:
   void load_boot_rom(std::vector<std::uint8_t> boot_bytes);
 
   std::uint8_t read(std::uint16_t address);
-  void write(std::uint16_t address, std::uint8_t value);
+  void write(std::uint16_t address, std::uint8_t value); // no implementado
 
   void initMemoryBus();
 };

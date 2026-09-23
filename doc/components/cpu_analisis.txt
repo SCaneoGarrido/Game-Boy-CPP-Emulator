@@ -179,6 +179,27 @@ El metodo "b_illegal_opcode" debe cumplir los siguientes criterios:
 	2. Mostrar el valor hexadecimal de `current_opcode` y la dirección actual del `PC`.
 	3. Forzar la salida del programa (ej: `std::exit(1)`) o lanzar una excepción para detener la ejecución.
 	4. Retornar 0 (aunque el programa ya se habrá detenido).
+
+
+Aprende a leer la tabla de instrucciones, siempre se muestran en el siguiente formato los opcodes.
+	ADD A,B -> Instruccion
+	 1  4   -> Tamaño(1 byte) y Tiempo (4 T-Cycles)
+	Z 0 H C -> Flags 
+
+1.- La instruccion nos dice "ADD" sumar el contenido del registro B al registro A y el resultado final
+    se guarda automaticamente dentro del acumulador A.
+
+2.- Tamaño y tiempo, basicamente el primer numero nos indica el tamaño de la instruccion en este caso 1 byte (8bits), 
+    el segundo numero indica los ciclos de reloj de la gameboy y esto se convierte ciclos de maquina donde:
+	1 M-Cycle = 4 T-Cycles
+	por ende retorna 1.
+3.- Los flags el hecho de que esten presentens las letras nos quieren decir lo siguiente:
+	Z: Comprueba si el resultado dio cero, si es asi se enciende el flag, en cualquier otro caso se apaga.
+	0: Al estar en cero, nos dice "Esta operacion no es una resta" por ende debe apagarse siempre el flag N.
+	H: Aqui hay que comprobar si hubo Half Carry.
+	C: Comprobar si hubo carry.
+
+---------------------------------
 ======================================================== Logica de FLAGS ================================================================
 Para manejar la logica de los flags, necesito declarar como constantes las mascaras de BIT que usare para obtener el bit necesario del registro
 F, recuerda que los ultimos 3 bits del registro siempre será en 0.
@@ -234,3 +255,4 @@ Metodo getFlag:
 		devolver verdadero
 	  sino:
 		devolver falso.
+

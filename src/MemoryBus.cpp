@@ -1,7 +1,7 @@
 #include "../include/MemoryBus.h"
-
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 
 BUS::BUS() {};
 
@@ -10,7 +10,7 @@ BUS::~BUS() {};
 void BUS::initMemoryBus() {
   IE = 0;
   reg_ff0 = 0x00;
-  boot_rom_enable = false;
+  bios_mapped = true;
 }
 
 void BUS::clearArrays() {
@@ -24,25 +24,21 @@ void BUS::clearArrays() {
 }
 
 void BUS::load_rom(std::vector<std::uint8_t> bytesinformation) {
+  // Carga de ROM temporal para juegos pequeños
+  // 32KB maximo
   cartrigbe_rom_bank = bytesinformation;
 }
 
 std::uint8_t BUS::read(std::uint16_t address) {
   // Debe ir verificando los rangos de memoria.
-
-  if (address <= 0x00FF && boot_rom_enable) {
+  
+  if (address <= 0x00FF && bios_mapped) {
     return boot_rom[address];
   }
 
   if (address <= 0x7FFF) {
     if (address < cartrigbe_rom_bank.size()) {
       return cartrigbe_rom_bank[address];
-      /*
-      std::uint16_t index = address - 0x0100;
-      if (index < cartrigbe_rom_bank.size()) {
-        return cartrigbe_rom_bank[index];
-      }
-      */
     }
     return 0xFF;
   }
@@ -54,21 +50,21 @@ std::uint8_t BUS::read(std::uint16_t address) {
   else if (address >= 0xA000 && address <= 0xBFFF) {
     return 0x00;
   } 
-  else if (address >= 0xC000 & address <= 0xDFFF) {
+  else if (address >= 0xC000 && address <= 0xDFFF) {
     return wram[address - 0xC000];
   } 
-  else if (address >= 0xE000 & address <= 0xFDFF) {
+  else if (address >= 0xE000 && address <= 0xFDFF) {
     return wram[(address - 0x2000) - 0xC000];
   }
 
-  else if (address >= 0xFE00 & address <= 0xFEFF) {
+  else if (address >= 0xFE00 && address <= 0xFEFF) {
     return oam[address - 0xFE00];
   } 
-  else if (address >= 0xFF00 & address <= 0xFF7F) {
+  else if (address >= 0xFF00 && address <= 0xFF7F) {
     return io_registers[address - 0xFE00];
   }
 
-  else if (address >= 0xFF80 & address <= 0xFFFE) {
+  else if (address >= 0xFF80 && address <= 0xFFFE) {
     return hram[address - 0xFF80];
   }
 
@@ -76,4 +72,11 @@ std::uint8_t BUS::read(std::uint16_t address) {
     return IE;
   }
   return 0xFF;
+}
+
+void BUS::write(std::uint16_t address, std::uint8_t value) {
+  std::cout << "Writing in: " << std::hex << address << std::endl;
+  std::cout << "Value: " << std::hex << value << std::endl;
+
+  // Terminar la logica de escritura de este metodo.
 }

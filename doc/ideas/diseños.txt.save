@@ -1,0 +1,154 @@
+Estrategia A: Separar [HL] en sus propios templates independientes (La más recomendada)
+En lugar de intentar meter la memoria dentro de tu plantilla de registros, dejas que el template LD r8, 
+r8 use únicamente tus 7 registros reales de 8 bits (lo que te resolverá 49 opcodes automáticos).Para las instrucciones que involucran a [HL], 
+creas dos plantillas cortas y específicas:
+
+1. Para leer de la memoria: LD r8, [HL] (Opcodes del tipo 0x46, 0x4E...)
+
+cpptemplate <std::uint8_t CPU::*registro_destino>
+int CPU::op_ld_r8_hl() {
+    // 1. Obtenemos la dirección de 16 bits combinando H y L con Bit Shifting
+    std::uint16_t direccion = get_HL(); 
+    
+    // 2. Le pedimos el byte real al Bus y lo guardamos en el registro destino
+    this->*registro_destino = bus.read(direccion);
+    
+    // 3. Cuesta 2 M-Cycles (8 T-Cycles) porque leer de la memoria toma más tiempo
+    return 2; 
+}
+
+2. Para escribir en la memoria: LD [HL], r8 (Opcodes del tipo 0x70, 0x71...)cpptemplate <std::uint8_t CPU::*registro_origen>
+int CPU::op_ld_hl_r8() {
+    std::uint16_t direccion = get_HL();
+    std::uint8_t dato = this->*registro_origen;
+    
+    // Usamos el método write del Bus (que implementarás en el futuro)
+    bus.write(direccion, dato); 
+    
+    return 2; // Cuesta 2 M-Cycles
+}
+
+¿Cómo se mapearía esto en tu constructor?Al separar el comportamiento de la memoria, tu constructor seguirá viéndose sumamente limpio y ordenado. Un fragmento de tu mapeo manual se estructuraría así:cpp// Copia pura entre registros reales (Usando tu plantilla de dos parámetros)
+opcode_table[0x40] = &CPU::op_ld_r8_r8<&CPU::B, &CPU::B>; // LD B, B
+opcode_table[0x41] = &CPU::op_ld_r8_r8<&CPU::B, &CPU::C>; // LD B, C
+
+// Cuando la tabla te pide [HL], "enchufas" las funciones de memoria que creaste arriba:
+opcode_table[0x46] = &CPU::op_ld_r8_hl<&CPU::B>;          // 0x46 -> LD B, [HL]
+opcode_table[0x70] = &CPU::op_ld_hl_r8<&CPU::B>;          // 0x70 -> LD [H
+
+
+
+============================================================================================
+		Diseño: Algoritmo de carga de instrucciones LD
+============================================================================================
+Importinte:
+LD dest, origen
+       │       │
+       │       └── bits 2-0
+       └────────── bits 5-3
+===========================================================================================
+
+FUNCION OpcodeLoaders::load_ld_family_opcodes(CPU& cpu) {
+    BUCLE PARA dest DESDE 0 HASTA 7 {
+        BUCLE PARA src DESDE 0 HASTA 7 {
+            
+            ENTERO opcode = 0x40 + (dest DESPLAZADO_IZQ 3) + src
+
+            SI (dest == 6 Y src == 6) {
+                // Excepción física del hardware (Opcode 0x76 -> HALT)
+                SALTAR_ITERACION 
+            }
+            SINO SI (dest == 6) {
+                // Destino es memoria -> Instrucción del tipo LD (HL), r8
+                // Evaluamos 'src' con un switch/case para asignar la plantilla op_ld_hl_r8 correcta
+		switch (src) {
+			case 0: cpu.opcode_table[opcode] = &CPU::op_ld_hl_r8<&CPU::B>; break;
+			...
+		}
+            }
+            SINO SI (src == 6) {
+                // Origen es memoria -> Instrucción del tipo LD r8, (HL)
+                // Evaluamos 'dest' con un switch/case para asignar la plantilla op_ld_r8_hl correcta
+		switch (dest) {
+			case 0: cpu.opcode_table[opcode] = &CPU::op_ld_r8_hl<&CPU::B>; break;
+			...
+		}
+            }
+            SINO {
+                // Registro a Registro puro (r8, r8) sin interferencia de HL
+                cpu.opcode_table[opcode] = &CPU::op_ld_r8_r8
+            }
+        }
+    }
+}
+==============================================================================================
+ Diseño Templates para instrucciones LD, de tipo: LD A,(rr) 'rr: registros (BC, DE, HL)'
+==============================================================================================
+estas instrucciones basicamente toman el datos alojado en la direccion de memoria 'rr' y lo cargan
+en el registro A (acumulator), pero tiene una peculiaridad y es que los opcodes de: 
+	0x3A: LD A, (HL-) 
+	0x2A: LD A, (HL+) 
+Estos opcodes basicamente leen la direccion de memoria de HL y hacen un decremento en caso de que el 
+simbolo sea '-' y hacen un aumento en caso de que el simbolo sea '+'.
+
+el unico constante es el destino de la instruccion (A), por ende el template debe abarcar las combinaciones
+de (BC, DE, HL) y saber cuando aumentar o restar segun el simbolo.
+
+el template se diseñara de la siguiente forma:
+	template<std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, bool rr_operation>
+desglozando este template 
+	xregistro: parametro de 8 bits que representan los bit mas significativos de las instrucciones
+		   combinadas.
+	yregistro: parametro de 8 bits que representa los bits menos significativos de las instrucciones
+		   combinadas.
+	rr_operation: bandera para manejar la logica de operacion de aumento o decremento del origen HL.
+
+Algoritmo: 
+	TEMPLATE <BOOLEANO es_escritura, std::uint8_t CPU::*x_reg, std::uint8_t CPU::*y_reg, ENTERO rr_operation>
+    ENTERO CPU::op_ld_reg16_indirecto() {
+      
+      // 1. LEER: Obtengo el puntero de 16 bits combinando los dos registros miembros pasados por parámetro
+      // Uso el operador ->* sobre 'this' para extraer el valor actual de los registros de esta CPU
+      ENTERO_16 direccion = LLAMAR getPairedRegisters(this->*x_reg, this->*y_reg)
+
+      // 2. TRANSFERENCIA DE DATOS: Siempre interactúa con el Acumulador A
+      SI (es_escritura ENTONCES) {
+        // Caso: LD (rr), A -> Escribe el valor de A en la RAM
+        bus.write(direccion, this->A)
+      } SINO {
+        // Caso: LD A, (rr) -> Lee de la RAM hacia A
+        this->A = bus.read(direccion)
+      }
+
+      // 3. LÓGICA DE CONTROL (rr_operation): Maneja el auto-incremento o decremento si aplica
+      SI (rr_operation == 1) {
+        direccion = direccion + 1 // Para casos HL+
+      } SINO SI (rr_operation == 2) {
+        direccion = direccion - 1 // Para casos HL-
+      }
+      // Si rr_operation es 0 (como en BC o DE), no hace nada aquí y mantiene su valor intacto
+
+      // 4. GUARDAR: Si la operación alteró la dirección, actualizamos los registros físicos de vuelta
+      SI (rr_operation != 0) {
+        LLAMAR setPairedRegisters(this->*x_reg, this->*y_reg, direccion)
+      }
+
+    RETORNAR 2 // Todas estas operaciones indirectas de memoria consumen 2 M-Cycles (8 T-Cycles)
+}
+
+declaracion: 
+  // ==================== LECTURAS: LD A, (rr) ====================
+  // Parámetros: <es_escritura=false, registro_alto, registro_bajo, operacion>
+  
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<false, &CPU::B, &CPU::C, 0>(); // Opcode 0x0A: LD A, (BC)
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<false, &CPU::D, &CPU::E, 0>(); // Opcode 0x1A: LD A, (DE)
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<false, &CPU::H, &CPU::L, 1>(); // Opcode 0x2A: LD A, (HL+)
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<false, &CPU::H, &CPU::L, 2>(); // Opcode 0x3A: LD A, (HL-)
+
+  // ==================== ESCRITURAS: LD (rr), A ====================
+  // Parámetros: <es_escritura=true, registro_alto, registro_bajo, operacion>
+
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<true, &CPU::B, &CPU::C, 0>();  // Opcode 0x02: LD (BC), A
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<true, &CPU::D, &CPU::E, 0>();  // Opcode 0x12: LD (DE), A
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<true, &CPU::H, &CPU::L, 1>();  // Opcode 0x22: LD (HL+), A
+  TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<true, &CPU::H, &CPU::L, 2>();  // Opcode 0x32: LD (HL-), A
