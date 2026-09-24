@@ -78,13 +78,21 @@ void OpcodeLoaders::load_ld_8bits_block(CPU &cpu) {
 
 void OpcodeLoaders::load_ld_INC_block(CPU &cpu) {
   // ===========================================================================
-  // 1. CARGA DE INC r8.
+  // 1. CARGA DE INC r8. operacion aritemtica de 8 BITS
   // ===========================================================================
-  cpu.opcode_table[0x04] = &CPU::op_INC_r8<&CPU::B>; // INC B
-  cpu.opcode_table[0x0C] = &CPU::op_INC_r8<&CPU::C>; // INC C
-  cpu.opcode_table[0x14] = &CPU::op_INC_r8<&CPU::D>; // INC D
-  cpu.opcode_table[0x1C] = &CPU::op_INC_r8<&CPU::E>; // INC E
-  cpu.opcode_table[0x24] = &CPU::op_INC_r8<&CPU::H>; // INC H
-  cpu.opcode_table[0x2C] = &CPU::op_INC_r8<&CPU::L>; // INC L
-  cpu.opcode_table[0x3C] = &CPU::op_INC_r8<&CPU::A>; // INC A
+  cpu.opcode_table[0x04] = &CPU::op_INC_r8<&CPU::B, false>; // INC B
+  cpu.opcode_table[0x0C] = &CPU::op_INC_r8<&CPU::C, false>; // INC C
+  cpu.opcode_table[0x14] = &CPU::op_INC_r8<&CPU::D, false>; // INC D
+  cpu.opcode_table[0x1C] = &CPU::op_INC_r8<&CPU::E, false>; // INC E
+  cpu.opcode_table[0x24] = &CPU::op_INC_r8<&CPU::H, false>; // INC H
+  cpu.opcode_table[0x2C] = &CPU::op_INC_r8<&CPU::L, false>; // INC L
+  cpu.opcode_table[0x3C] = &CPU::op_INC_r8<&CPU::A, false>; // INC A
+  cpu.opcode_table[0x34] = &CPU::op_INC_r8<nullptr, true>;  // INC HL
+   // ===========================================================================
+  // 2. CARGA DE INC nn. operacion aritemtica de 16 BITS
+  // ===========================================================================
+  cpu.opcode_table[0x03] = &CPU::op_INC_nn<&CPU::B, &CPU::C, false>;
+  cpu.opcode_table[0x13] = &CPU::op_INC_nn<&CPU::D, &CPU::E, false>;
+  cpu.opcode_table[0x23] = &CPU::op_INC_nn<&CPU::H, &CPU::L, false>;
+  cpu.opcode_table[0x33] = &CPU::op_INC_nn<nullptr, nullptr, true>;
 }

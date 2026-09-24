@@ -32,7 +32,6 @@ int CPU::op_ld_r8_hl() {
   std::uint8_t data = bus.read(memory_direction);
   // Cargo en el destrino el dato leido de la memoria.
   this->*registro_destino = data;
-  // Esta familia de operaciones cuesta 8 ciclos de reloj 
   return 2; // 1 M-Cycle = 4 T-Cycle
 }
 template int CPU::op_ld_r8_hl<&CPU::A>();

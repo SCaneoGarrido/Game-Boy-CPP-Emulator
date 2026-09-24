@@ -36,8 +36,10 @@ private:
   int op_ld_hl_r8();
   template<bool its_writer ,std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, int rr_operation>
   int op_ld_reg16_indirect();
-  template<std::uint8_t CPU::*registro>
+  template<std::uint8_t CPU::*registro, bool hl_modified>
   int op_INC_r8();
+  template<std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, bool sp_modified>
+  int op_INC_nn();
   int op_ld_r8_r8();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();

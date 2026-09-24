@@ -7,6 +7,7 @@ add_executable(DMGE
   src/CPU.cpp
   src/MemoryBus.cpp
   src/CPU_LD_Opcodes.cpp
+  src/CPU_INC_Opcodes.cpp
   utils/OpcodesLoaders.cpp
   utils/FileUtils.cpp
 )

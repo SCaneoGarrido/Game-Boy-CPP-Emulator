@@ -27,7 +27,13 @@ void CPU::cpuCycle() {
   current_opcode = bus.read(PC);
   PC++; 
   
-  std::cout << "Opcode Obtenido: " << std::hex << static_cast<int>(current_opcode) << std::endl;
+  std::cout << "Opcode ejecutado: 0x" 
+          << std::hex
+          << std::uppercase
+          << std::setw(2)
+          << std::setfill('0')
+          << static_cast<int>(current_opcode)
+          << std::endl;
 
   // 2. DECODE (Decodificación)
   InstructionFunc funcion = opcode_table[current_opcode];
