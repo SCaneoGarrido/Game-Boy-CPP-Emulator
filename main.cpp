@@ -2,6 +2,7 @@
 #include "./include/MemoryBus.h"
 #include <cstdint>
 #include <vector>
+#include <iostream>
 
 int main() {
   // ROM de prueba con la familia LD completa e incrementos intercalados
@@ -32,8 +33,14 @@ int main() {
 
       // --- CASO ESPECIAL: INC (HL) ---
       // Como H=0xC0 y L=0x00, HL apunta a la dirección 0xC000 (WRAM).
-      0x34  // 15. INC (HL)   -> Lee RAM[0xC000], le suma 1 y lo guarda ahí mismo. (3 M-Cycles)
+      0x34,  // 15. INC (HL)   -> Lee RAM[0xC000], le suma 1 y lo guarda ahí mismo. (3 M-Cycles)
             //                  Banderas: Z, N, H se actualizan según el valor de esa RAM.
+
+      // --- AÑADE ESTO AL FINAL DE TU VECTOR DE TESTINSTRUCTIONS ---
+      0x3E, 0x0F, // LD A, 0x0F   -> Cargamos 0x0F en A
+      0x3C,       // INC A        -> 0x0F + 1 = 0x10. ¡Esto genera un HALF-CARRY! (F debe cambiar, H=1)
+      0x3E, 0xFF, // LD A, 0xFF   -> Cargamos 0xFF en A
+      0x3C        // INC A        -> 0xFF + 1 = 0x00. ¡Esto genera un ZERO y un HALF-CARRY! (Z=1, H=1)
   };
 
   std::vector<std::uint8_t> testRom(0x0100, 0x00);
@@ -48,7 +55,10 @@ int main() {
   int numero_de_instrucciones = 10;
   for (int i = 0; i < sizeof(testInstructions); i++) {
     cpu.cpuCycle();
+    std::cout << " ================================================ \n";
     cpu.showCPUINFO();
+    std::cout << " ================================================ \n";
+
   }
 
   return 0;

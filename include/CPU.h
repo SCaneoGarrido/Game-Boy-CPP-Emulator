@@ -14,7 +14,7 @@ private:
   std::uint16_t PC, SP;
   // ============================== Opcodes data ============================== 
   std::uint8_t current_opcode;
-   using InstructionFunc = int (CPU::*)();
+  using InstructionFunc = int (CPU::*)();
   InstructionFunc opcode_table[256];
   // ============================== Flags Mask========================================  
   const std::uint8_t FLAG_Z = 0x80;
@@ -28,19 +28,23 @@ private:
   void setPairedRegisters(std::uint8_t& x_reg, std::uint8_t& y_reg, std::uint16_t value);
   void initCpu();
   // ============================== CPU-INSTRUCTIONS =============================================
+  template<std::uint8_t CPU::*registro_destino, bool hl_modified>
+  int op_ld_n_imm8();
   template<std::uint8_t CPU::*registro_destino>
-  int op_ld_r8_imm8();
-  template<std::uint8_t CPU::*registro_destino>
-  int op_ld_r8_hl();
+  int op_ld_n_hl();
   template<std::uint8_t CPU::*registro_origen>
-  int op_ld_hl_r8();
+  int op_ld_hl_n();
   template<bool its_writer ,std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, int rr_operation>
   int op_ld_reg16_indirect();
   template<std::uint8_t CPU::*registro, bool hl_modified>
-  int op_INC_r8();
+  int op_INC_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_DEC_n();
   template<std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, bool sp_modified>
   int op_INC_nn();
-  int op_ld_r8_r8();
+  template<std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, bool sp_modified>
+  int op_DEC_nn();
+  int op_ld_r1_r2();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();
   int b_stop();
@@ -54,9 +58,9 @@ private:
   bool checkHalfCarrySub(std::uint8_t a, std::uint8_t b, std::uint8_t carry);
   bool checkCarrySub(std::uint16_t a, std::uint16_t b, std::uint16_t carry);
   // =================================== Friend functions =================================
-  friend void OpcodeLoaders::load_ld_8bits_block(CPU& cpu);
-  friend void OpcodeLoaders::load_ld_INC_block(CPU& cpu);
-
+  friend void OpcodeLoaders::load_ld_block(CPU& cpu);
+  friend void OpcodeLoaders::load_INC_block(CPU& cpu);
+  friend void OpcodeLoaders::load_DEC_block(CPU& cpu);
 public:
 
   void loadOpcodes();

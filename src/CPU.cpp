@@ -27,7 +27,7 @@ void CPU::cpuCycle() {
   current_opcode = bus.read(PC);
   PC++; 
   
-  std::cout << "Opcode ejecutado: 0x" 
+  std::cout << "current_opcode: 0x" 
           << std::hex
           << std::uppercase
           << std::setw(2)
@@ -52,9 +52,9 @@ void CPU::initCpu() {
 void CPU::loadOpcodes() {
   opcode_table[0x00] = &CPU::b_nop;
   // opcode_table[0x10] = &CPU::b_stop;
-  OpcodeLoaders::load_ld_8bits_block(*this);
+  OpcodeLoaders::load_ld_block(*this);
   // opcode_table[0x76] = &CPU::b_halt;
-  OpcodeLoaders::load_ld_INC_block(*this);
+  OpcodeLoaders::load_INC_block(*this);
 }
 
 int CPU::b_illegal_opcode() {
@@ -69,13 +69,14 @@ int CPU::b_illegal_opcode() {
 int CPU::b_nop() { return 1; }
 
 std::uint16_t CPU::getPairedRegisters(std::uint8_t x_value,
-                                      std::uint8_t y_value) {
-  return (x_value << 8) | y_value;
+                                     std::uint8_t y_value) {
+  std::uint16_t PairedRegister = (x_value << 8) | y_value;
+  return PairedRegister;
 }
 
 void CPU::setPairedRegisters(std::uint8_t &x_reg, std::uint8_t &y_reg,
                              std::uint16_t value) {
-  x_reg = (value << 8) & 0xFF; // Saco 8 bit superiores
+  x_reg = (value >> 8) & 0xFF; // Saco 8 bit superiores
   y_reg = value & 0xFF;        // Saco 8 bits inferiores
 }
 /*
@@ -85,7 +86,7 @@ std::uint16_t CPU::getHlDirection() {
 */
 void CPU::setFlag(std::uint8_t mask) {
   F = F | mask;
-  F = F & 0XF0; // los ultomos 3 bits son 0
+  F = F & 0XF0; // los ultimos 4 bits son 0
 }
 
 void CPU::clearFlag(std::uint8_t mask) {
