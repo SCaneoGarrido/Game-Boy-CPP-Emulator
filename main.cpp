@@ -36,7 +36,6 @@ int main() {
       0x34,  // 15. INC (HL)   -> Lee RAM[0xC000], le suma 1 y lo guarda ahí mismo. (3 M-Cycles)
             //                  Banderas: Z, N, H se actualizan según el valor de esa RAM.
 
-      // --- AÑADE ESTO AL FINAL DE TU VECTOR DE TESTINSTRUCTIONS ---
       0x3E, 0x0F, // LD A, 0x0F   -> Cargamos 0x0F en A
       0x3C,       // INC A        -> 0x0F + 1 = 0x10. ¡Esto genera un HALF-CARRY! (F debe cambiar, H=1)
       0x3E, 0xFF, // LD A, 0xFF   -> Cargamos 0xFF en A
