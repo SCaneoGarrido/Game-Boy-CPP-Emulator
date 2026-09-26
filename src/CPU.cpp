@@ -110,7 +110,7 @@ bool CPU::checkCarryAdd(std::uint16_t a, std::uint16_t b, std::uint16_t carry) {
 // Operaciones de substraccion
 bool CPU::checkHalfCarrySub(std::uint8_t a, std::uint8_t b,
                             std::uint8_t carry) {
-  return (a & 0x0F) < ((b & 0x0F) + carry);
+  return ((a & 0x0F) - (b & 0x0F) - carry) < 0;
 }
 
 // Devuelve true si el valor a restar es mayor que el que tenemos (resultado <

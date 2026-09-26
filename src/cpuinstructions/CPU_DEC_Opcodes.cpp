@@ -1,4 +1,4 @@
-#include "../include/CPU.h"
+#include "../../include/CPU.h"
 #include <cstdint>
 
 

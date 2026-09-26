@@ -1,4 +1,4 @@
-#include "../include/CPU.h"
+#include "../../include/CPU.h"
 #include <cstdint>
 
 // ========================= Instruccion LD_r8_imm8 ===============================
@@ -81,7 +81,6 @@ int CPU::op_ld_reg16_indirect() {
   
   return 2;
 }
-
 // ==================== LECTURAS: LD A, (rr) ====================
 // Parámetros: <es_escritura=false, registro_alto, registro_bajo, operacion>
 template int CPU::op_ld_reg16_indirect<false, &CPU::B, &CPU::C, 0>(); // Opcode 0x0A  LD A, (BC)

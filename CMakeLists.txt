@@ -6,8 +6,12 @@ add_executable(DMGE
   main.cpp
   src/CPU.cpp
   src/MemoryBus.cpp
-  cpuinstructions/CPU_LD_Opcodes.cpp
-  cpuinstructions/CPU_INC_Opcodes.cpp
+  src/cpuinstructions/CPU_ADD_Opcodes.cpp
+  src/cpuinstructions/CPU_AND_Opcodes.cpp
+  src/cpuinstructions/CPU_DEC_Opcodes.cpp
+  src/cpuinstructions/CPU_INC_Opcodes.cpp
+  src/cpuinstructions/CPU_LD_Opcodes.cpp
+  src/cpuinstructions/CPU_SUB_Opcodes.cpp
   utils/OpcodesLoaders.cpp
   utils/FileUtils.cpp
 )

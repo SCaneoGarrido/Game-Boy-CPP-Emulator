@@ -12,11 +12,11 @@ private:
   using Reg8Ptr = std::uint8_t CPU::*;
   // Special Registers
   std::uint16_t PC, SP;
-  // ============================== Opcodes data ============================== 
+  // ============================== Opcodes data ============================================= 
   std::uint8_t current_opcode;
   using InstructionFunc = int (CPU::*)();
   InstructionFunc opcode_table[256];
-  // ============================== Flags Mask========================================  
+  // ============================== Flags Mask ==============================  
   const std::uint8_t FLAG_Z = 0x80;
   const std::uint8_t FLAG_N = 0x40;
   const std::uint8_t FLAG_H = 0x20;
@@ -44,6 +44,14 @@ private:
   int op_INC_nn();
   template<std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, bool sp_modified>
   int op_DEC_nn();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_ADD_A_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_ADC_A_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_SUB_A_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_SBC_A_n();
   int op_ld_r1_r2();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();
@@ -61,8 +69,10 @@ private:
   friend void OpcodeLoaders::load_ld_block(CPU& cpu);
   friend void OpcodeLoaders::load_INC_block(CPU& cpu);
   friend void OpcodeLoaders::load_DEC_block(CPU& cpu);
-public:
+  friend void OpcodeLoaders::load_ADD_block(CPU &cpu);
+  friend void OpcodeLoaders::load_SUB_block(CPU &cpu);
 
+public:
   void loadOpcodes();
   CPU(BUS& _bus); // aqui necesitmaos pasar por referencia el BUS de memoria
   ~CPU();

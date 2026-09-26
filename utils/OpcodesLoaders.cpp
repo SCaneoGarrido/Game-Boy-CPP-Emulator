@@ -75,6 +75,61 @@ void OpcodeLoaders::load_ld_block(CPU &cpu) {
   cpu.opcode_table[0x32] = &CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 2>;  // (HL-)
 }
 
+void OpcodeLoaders::load_ADD_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE ADD A, n
+  // ===========================================================================
+  cpu.opcode_table[0x87] = &CPU::op_ADD_A_n<&CPU::A, false, false>;
+  cpu.opcode_table[0x80] = &CPU::op_ADD_A_n<&CPU::B, false, false>;
+  cpu.opcode_table[0x81] = &CPU::op_ADD_A_n<&CPU::C, false, false>;
+  cpu.opcode_table[0x82] = &CPU::op_ADD_A_n<&CPU::D, false, false>;
+  cpu.opcode_table[0x83] = &CPU::op_ADD_A_n<&CPU::E, false, false>;
+  cpu.opcode_table[0x84] = &CPU::op_ADD_A_n<&CPU::H, false, false>;
+  cpu.opcode_table[0x85] = &CPU::op_ADD_A_n<&CPU::L, false, false>;
+  cpu.opcode_table[0x86] = &CPU::op_ADD_A_n<nullptr, true, false>;
+  cpu.opcode_table[0xC6] = &CPU::op_ADD_A_n<nullptr, false, true>;
+  // ===========================================================================
+  // 2. CARGA DE ADC A, n
+  // ===========================================================================
+  cpu.opcode_table[0x8F] = &CPU::op_ADC_A_n<&CPU::A, false, false>;
+  cpu.opcode_table[0x88] = &CPU::op_ADC_A_n<&CPU::B, false, false>;
+  cpu.opcode_table[0x89] = &CPU::op_ADC_A_n<&CPU::C, false, false>;
+  cpu.opcode_table[0x8A] = &CPU::op_ADC_A_n<&CPU::D, false, false>;
+  cpu.opcode_table[0x8B] = &CPU::op_ADC_A_n<&CPU::E, false, false>;
+  cpu.opcode_table[0x8C] = &CPU::op_ADC_A_n<&CPU::H, false, false>;
+  cpu.opcode_table[0x8D] = &CPU::op_ADC_A_n<&CPU::L, false, false>;
+  cpu.opcode_table[0x8E] = &CPU::op_ADC_A_n<nullptr, true, false>;
+  cpu.opcode_table[0xCE] = &CPU::op_ADC_A_n<nullptr, false, true>;
+
+}
+
+void OpcodeLoaders::load_SUB_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE SUB A, n
+  // ===========================================================================
+  cpu.opcode_table[0x87] = &CPU::op_SUB_A_n<&CPU::A, false, false>;
+  cpu.opcode_table[0x80] = &CPU::op_SUB_A_n<&CPU::B, false, false>;
+  cpu.opcode_table[0x81] = &CPU::op_SUB_A_n<&CPU::C, false, false>;
+  cpu.opcode_table[0x82] = &CPU::op_SUB_A_n<&CPU::D, false, false>;
+  cpu.opcode_table[0x83] = &CPU::op_SUB_A_n<&CPU::E, false, false>;
+  cpu.opcode_table[0x84] = &CPU::op_SUB_A_n<&CPU::H, false, false>;
+  cpu.opcode_table[0x85] = &CPU::op_SUB_A_n<&CPU::L, false, false>;
+  cpu.opcode_table[0x86] = &CPU::op_SUB_A_n<nullptr, true, false>;
+  cpu.opcode_table[0xC6] = &CPU::op_SUB_A_n<nullptr, false, true>;
+
+  // ===========================================================================
+  // 2. CARGA DE SBC A, n
+  // ===========================================================================
+  cpu.opcode_table[0xA7] = &CPU::op_SBC_A_n<&CPU::A, false, false>;
+  cpu.opcode_table[0xA0] = &CPU::op_SBC_A_n<&CPU::B, false, false>;
+  cpu.opcode_table[0xA1] = &CPU::op_SBC_A_n<&CPU::C, false, false>;
+  cpu.opcode_table[0xA2] = &CPU::op_SBC_A_n<&CPU::D, false, false>;
+  cpu.opcode_table[0xA3] = &CPU::op_SBC_A_n<&CPU::E, false, false>;
+  cpu.opcode_table[0xA4] = &CPU::op_SBC_A_n<&CPU::H, false, false>;
+  cpu.opcode_table[0xA5] = &CPU::op_SBC_A_n<&CPU::L, false, false>;
+  cpu.opcode_table[0xA6] = &CPU::op_SBC_A_n<nullptr, true, false>;
+  cpu.opcode_table[0xE6] = &CPU::op_SBC_A_n<nullptr, false, true>;
+}
 
 void OpcodeLoaders::load_INC_block(CPU &cpu) {
   // ===========================================================================
@@ -118,3 +173,5 @@ void OpcodeLoaders::load_DEC_block(CPU &cpu) {
   cpu.opcode_table[0x3B] = &CPU::op_DEC_nn<nullptr, nullptr, true>;
 
 }
+
+

@@ -1,4 +1,4 @@
-#include "../include/CPU.h"
+#include "../../include/CPU.h"
 #include <cstdint>
 
 // ========================= Instruccion INC n ===============================
@@ -22,7 +22,12 @@ int CPU::op_INC_n() {
   // Evaluo FLAG Z 
   if (result == 0) setFlag(FLAG_Z); else clearFlag(FLAG_Z); clearFlag(FLAG_N);
   // Evaluo FLAG H
-  if ((original_value & 0x0F) == 0x0F) setFlag(FLAG_H); else clearFlag(FLAG_H);
+  //if ((original_value & 0x0F) == 0x0F) setFlag(FLAG_H); else clearFlag(FLAG_H);
+  if (checkHalfCarryAdd(original_value, 1, 0)) {
+    setFlag(FLAG_H);
+  } else {
+    clearFlag(FLAG_H);
+  }
   return MCycles;
 }
 template int CPU::op_INC_n<&CPU::B, false>();
