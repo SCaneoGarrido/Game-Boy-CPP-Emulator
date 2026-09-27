@@ -24,7 +24,7 @@ int CPU::op_DEC_n() {
   
   setFlag(FLAG_N); // setting first, bc its a decrement operation
   if (result == 0) setFlag(FLAG_Z); else clearFlag(FLAG_Z);
-  if ((original_value & 0x0F) == 0) clearFlag(FLAG_H); else setFlag(FLAG_H);
+  if ((original_value & 0x0F) == 0) setFlag(FLAG_H); else clearFlag(FLAG_H);
 
   return MCycles;
 }

@@ -3,7 +3,10 @@
 #include <cstring>
 #include <iostream>
 
-BUS::BUS() {};
+BUS::BUS() {
+
+  initMemoryBus();
+};
 
 BUS::~BUS() {};
 
@@ -11,6 +14,7 @@ void BUS::initMemoryBus() {
   IE = 0;
   reg_ff0 = 0x00;
   bios_mapped = true;
+  clearArrays();
 }
 
 void BUS::clearArrays() {
@@ -61,7 +65,7 @@ std::uint8_t BUS::read(std::uint16_t address) {
     return oam[address - 0xFE00];
   } 
   else if (address >= 0xFF00 && address <= 0xFF7F) {
-    return io_registers[address - 0xFE00];
+    return io_registers[address - 0xFF00];
   }
 
   else if (address >= 0xFF80 && address <= 0xFFFE) {
@@ -75,7 +79,7 @@ std::uint8_t BUS::read(std::uint16_t address) {
 }
 
 void BUS::write(std::uint16_t address, std::uint8_t value) {
-  std::cout << "Writing in: " << std::hex << address << std::endl;
-  std::cout << "Value: " << std::hex << value << std::endl;
+  std::cout << "Writing in: " << std::hex << static_cast<int>(address) << std::endl;
+  std::cout << "Value: " << std::hex << static_cast<int>(value) << std::endl;
   // QUEDA PENDIENTE HASTA TENER MAS COMPONETNES QUE LO USEN.
 }

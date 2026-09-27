@@ -51,14 +51,14 @@ void OpcodeLoaders::load_ld_block(CPU &cpu) {
   // ==========================================================
   // 2.- Carga de instrucciones de 8 bits inmediatos (LD n, imm8)
   //==========================================================
-  cpu.opcode_table[0x06] = &CPU::op_ld_n_imm8<&CPU::B, false>;
-  cpu.opcode_table[0x0E] = &CPU::op_ld_n_imm8<&CPU::C, false>;
-  cpu.opcode_table[0x16] = &CPU::op_ld_n_imm8<&CPU::D, false>;
-  cpu.opcode_table[0x1E] = &CPU::op_ld_n_imm8<&CPU::E, false>;
-  cpu.opcode_table[0x26] = &CPU::op_ld_n_imm8<&CPU::H, false>;
-  cpu.opcode_table[0x2E] = &CPU::op_ld_n_imm8<&CPU::L, false>;
-  cpu.opcode_table[0x3E] = &CPU::op_ld_n_imm8<&CPU::A, false>;
-  cpu.opcode_table[0x3E] = &CPU::op_ld_n_imm8<nullptr, true>;
+  cpu.opcode_table[0x06] = &CPU::op_ld_n_imm8<&CPU::B, false>;  // LD B, d8
+  cpu.opcode_table[0x0E] = &CPU::op_ld_n_imm8<&CPU::C, false>;  // LD C, d8
+  cpu.opcode_table[0x16] = &CPU::op_ld_n_imm8<&CPU::D, false>;  // LD D, d8
+  cpu.opcode_table[0x1E] = &CPU::op_ld_n_imm8<&CPU::E, false>;  // LD E, d8
+  cpu.opcode_table[0x26] = &CPU::op_ld_n_imm8<&CPU::H, false>;  // LD H, d8
+  cpu.opcode_table[0x2E] = &CPU::op_ld_n_imm8<&CPU::L, false>;  // LD L, d8
+  cpu.opcode_table[0x3E] = &CPU::op_ld_n_imm8<&CPU::A, false>;  // LD A, d8
+  cpu.opcode_table[0x36] = &CPU::op_ld_n_imm8<nullptr, true>;   // LD (HL), d8
   // ===========================================================================
   // 3. CARGA DE REGISTROS DE 16 BITS INDIRECTOS
   // ===========================================================================
@@ -107,28 +107,43 @@ void OpcodeLoaders::load_SUB_block(CPU &cpu) {
   // ===========================================================================
   // 1. CARGA DE SUB A, n
   // ===========================================================================
-  cpu.opcode_table[0x87] = &CPU::op_SUB_A_n<&CPU::A, false, false>;
-  cpu.opcode_table[0x80] = &CPU::op_SUB_A_n<&CPU::B, false, false>;
-  cpu.opcode_table[0x81] = &CPU::op_SUB_A_n<&CPU::C, false, false>;
-  cpu.opcode_table[0x82] = &CPU::op_SUB_A_n<&CPU::D, false, false>;
-  cpu.opcode_table[0x83] = &CPU::op_SUB_A_n<&CPU::E, false, false>;
-  cpu.opcode_table[0x84] = &CPU::op_SUB_A_n<&CPU::H, false, false>;
-  cpu.opcode_table[0x85] = &CPU::op_SUB_A_n<&CPU::L, false, false>;
-  cpu.opcode_table[0x86] = &CPU::op_SUB_A_n<nullptr, true, false>;
-  cpu.opcode_table[0xC6] = &CPU::op_SUB_A_n<nullptr, false, true>;
+  cpu.opcode_table[0x97] = &CPU::op_SUB_A_n<&CPU::A, false, false>;
+  cpu.opcode_table[0x90] = &CPU::op_SUB_A_n<&CPU::B, false, false>;
+  cpu.opcode_table[0x91] = &CPU::op_SUB_A_n<&CPU::C, false, false>;
+  cpu.opcode_table[0x92] = &CPU::op_SUB_A_n<&CPU::D, false, false>;
+  cpu.opcode_table[0x93] = &CPU::op_SUB_A_n<&CPU::E, false, false>;
+  cpu.opcode_table[0x94] = &CPU::op_SUB_A_n<&CPU::H, false, false>;
+  cpu.opcode_table[0x95] = &CPU::op_SUB_A_n<&CPU::L, false, false>;
+  cpu.opcode_table[0x96] = &CPU::op_SUB_A_n<nullptr, true, false>;
+  cpu.opcode_table[0xD6] = &CPU::op_SUB_A_n<nullptr, false, true>;
 
   // ===========================================================================
   // 2. CARGA DE SBC A, n
   // ===========================================================================
-  cpu.opcode_table[0xA7] = &CPU::op_SBC_A_n<&CPU::A, false, false>;
-  cpu.opcode_table[0xA0] = &CPU::op_SBC_A_n<&CPU::B, false, false>;
-  cpu.opcode_table[0xA1] = &CPU::op_SBC_A_n<&CPU::C, false, false>;
-  cpu.opcode_table[0xA2] = &CPU::op_SBC_A_n<&CPU::D, false, false>;
-  cpu.opcode_table[0xA3] = &CPU::op_SBC_A_n<&CPU::E, false, false>;
-  cpu.opcode_table[0xA4] = &CPU::op_SBC_A_n<&CPU::H, false, false>;
-  cpu.opcode_table[0xA5] = &CPU::op_SBC_A_n<&CPU::L, false, false>;
-  cpu.opcode_table[0xA6] = &CPU::op_SBC_A_n<nullptr, true, false>;
-  cpu.opcode_table[0xE6] = &CPU::op_SBC_A_n<nullptr, false, true>;
+  cpu.opcode_table[0x9f] = &CPU::op_SBC_A_n<&CPU::A, false, false>;
+  cpu.opcode_table[0x98] = &CPU::op_SBC_A_n<&CPU::B, false, false>;
+  cpu.opcode_table[0x99] = &CPU::op_SBC_A_n<&CPU::C, false, false>;
+  cpu.opcode_table[0x9A] = &CPU::op_SBC_A_n<&CPU::D, false, false>;
+  cpu.opcode_table[0x9B] = &CPU::op_SBC_A_n<&CPU::E, false, false>;
+  cpu.opcode_table[0x9C] = &CPU::op_SBC_A_n<&CPU::H, false, false>;
+  cpu.opcode_table[0x9D] = &CPU::op_SBC_A_n<&CPU::L, false, false>;
+  cpu.opcode_table[0x9E] = &CPU::op_SBC_A_n<nullptr, true, false>;
+  //cpu.opcode_table[0xE6] = &CPU::op_SBC_A_n<nullptr, false, true>; // existe ? 
+}
+
+void OpcodeLoaders::load_AND_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE AND n
+  // ===========================================================================
+  cpu.opcode_table[0xA7] = &CPU::op_AND_n<&CPU::A, false, false>;
+  cpu.opcode_table[0xA0] = &CPU::op_AND_n<&CPU::B, false, false>;
+  cpu.opcode_table[0xA1] = &CPU::op_AND_n<&CPU::C, false, false>;
+  cpu.opcode_table[0xA2] = &CPU::op_AND_n<&CPU::D, false, false>;
+  cpu.opcode_table[0xA3] = &CPU::op_AND_n<&CPU::E, false, false>;
+  cpu.opcode_table[0xA4] = &CPU::op_AND_n<&CPU::H, false, false>;
+  cpu.opcode_table[0xA5] = &CPU::op_AND_n<&CPU::L, false, false>;
+  cpu.opcode_table[0xA6] = &CPU::op_AND_n<nullptr, true, false>;
+  cpu.opcode_table[0xE6] = &CPU::op_AND_n<nullptr, false, true>;
 }
 
 void OpcodeLoaders::load_INC_block(CPU &cpu) {

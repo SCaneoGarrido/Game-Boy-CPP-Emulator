@@ -37,9 +37,9 @@ void CPU::cpuCycle() {
 
   // 2. DECODE (Decodificación)
   InstructionFunc funcion = opcode_table[current_opcode];
-
+  
   // 3. EXECUTE (Ejecución)
-  (this->*funcion)(); 
+  MCycles += (this->*funcion)();  
 }
 
 void CPU::initCpu() {
@@ -47,6 +47,7 @@ void CPU::initCpu() {
   PC = 0x0100;
   SP = 0;
   current_opcode = 0;
+  MCycles = 0;
 }
 
 void CPU::loadOpcodes() {
@@ -55,6 +56,10 @@ void CPU::loadOpcodes() {
   OpcodeLoaders::load_ld_block(*this);
   // opcode_table[0x76] = &CPU::b_halt;
   OpcodeLoaders::load_INC_block(*this);
+  OpcodeLoaders::load_DEC_block(*this);
+  OpcodeLoaders::load_ADD_block(*this);
+  OpcodeLoaders::load_SUB_block(*this);
+  OpcodeLoaders::load_AND_block(*this); 
 }
 
 int CPU::b_illegal_opcode() {

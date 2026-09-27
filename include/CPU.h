@@ -12,6 +12,7 @@ private:
   using Reg8Ptr = std::uint8_t CPU::*;
   // Special Registers
   std::uint16_t PC, SP;
+  int MCycles;
   // ============================== Opcodes data ============================================= 
   std::uint8_t current_opcode;
   using InstructionFunc = int (CPU::*)();
@@ -52,6 +53,8 @@ private:
   int op_SUB_A_n();
   template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
   int op_SBC_A_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_AND_n();
   int op_ld_r1_r2();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();
@@ -71,6 +74,7 @@ private:
   friend void OpcodeLoaders::load_DEC_block(CPU& cpu);
   friend void OpcodeLoaders::load_ADD_block(CPU &cpu);
   friend void OpcodeLoaders::load_SUB_block(CPU &cpu);
+  friend void OpcodeLoaders::load_AND_block(CPU &cpu);
 
 public:
   void loadOpcodes();

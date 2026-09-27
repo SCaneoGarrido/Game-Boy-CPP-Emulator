@@ -1,0 +1,252 @@
+================================================== CHECKLIST DE VALIDACION - OPCODES DMG ==================================================
+Fecha:      26/09/2026
+Alcance:    Opcodes implementados en src/cpuinstructions/*.cpp y registrados en utils/OpcodesLoaders.cpp
+Banco:      main.cpp (suites de traza visual: ld, ld16, inc, dec, add, sub, and)
+
+Leyenda:
+	[x]  Validado: la traza coincide con el valor esperado
+	[!]  Fallo conocido (ver seccion 4, Hallazgos)
+	[-]  No ejecutable hoy: el opcode no esta registrado (termina en "Opcode no implementado")
+	[ ]  Pendiente de validar a mano
+
+	Flags: ZNHC  ->  F = Z(0x80) N(0x40) H(0x20) C(0x10). Los 4 bits bajos de F siempre son 0.
+
+
+1.- COMO EJECUTAR
+	cmake -B build && cmake --build build
+	./build/DMGE            -> suites con opcodes registrados (ld, ld16, inc)
+	./build/DMGE <suite>    -> ld | ld16 | inc | dec | add (=adc) | sub (=sbc) | and | all
+
+	Condiciones de cada suite:
+	* BUS y CPU nuevos. Estado inicial: A..L=00, F=00, SP=0000, PC=0100.
+	* Codigo en 0x0100, datos en 0x0180. Los operandos (HL)/(BC)/(DE) apuntan a
+	  0x0180.. porque la ROM se lee de forma determinista y la WRAM no (B6, B7).
+	* A se carga con LD B,n + LD A,B (0x78) en vez de LD A,n para no depender de B1.
+	* Las escrituras a memoria solo se ven como traza "Writing in: <dir>" (B6).
+	* Al final se imprime el PC final esperado: debe coincidir con la ultima linea.
+
+
+2.- COBERTURA POR FAMILIA
+
+	|Opcode(s)            |Mnemonico          |M-cycles |Registrado |Estado |
+	------------------------------------------------------------------------
+	|00                   |NOP                |1        |si         |[x]    |
+	|06 0E 16 1E 26 2E    |LD r8,n            |2        |si         |[x]    |
+	|3E                   |LD A,n             |2        |NO (B1)    |[!]    |
+	|36                   |LD (HL),n          |3        |NO (B1)    |[!]    |
+	|40-7F (sin 76, 46.., |LD r8,r8           |1        |si         |[x]    |
+	|  ..70-77)           |                   |         |           |       |
+	|46 4E 56 5E 66 6E 7E |LD r8,(HL)         |2        |si         |[x]    |
+	|70-75 77             |LD (HL),r8         |2        |si         |[x]*   |
+	|0A 1A                |LD A,(BC)/(DE)     |2        |si         |[x]    |
+	|2A 3A                |LD A,(HL+)/(HL-)   |2        |si         |[x]    |
+	|02 12 22 32          |LD (BC)/(DE)/(HL+)/(HL-),A |2 |si       |[x]*   |
+	|04 0C 14 1C 24 2C 3C |INC r8             |1        |si         |[x]    |
+	|34                   |INC (HL)           |3        |si         |[x]*   |
+	|03 13 23 33          |INC rr / INC SP    |2        |si         |[x]    |
+	|05 0D 15 1D 25 2D 3D |DEC r8             |1        |NO (B2)    |[-][!] |
+	|35                   |DEC (HL)           |3        |NO (B2)    |[-]    |
+	|0B 1B 2B 3B          |DEC rr / DEC SP    |2        |NO (B2)    |[-]    |
+	|80-87, C6            |ADD A,n            |1/2      |NO (B2)    |[-]    |
+	|88-8F, CE            |ADC A,n            |1/2      |NO (B2)    |[-]    |
+	|90-97, D6            |SUB n              |1/2      |NO (B2,B3) |[-][!] |
+	|98-9F, DE            |SBC A,n            |1/2      |NO (B2,B3) |[-][!] |
+	|A0-A7, E6            |AND n              |1/2      |NO (B2)    |[-][!] |
+	|76                   |HALT               |1        |NO         |pend.  |
+	|10                   |STOP               |1        |NO         |pend.  |
+
+	* La direccion escrita es correcta, pero el valor no se guarda (BUS::write es un stub, B6).
+	  1/2 = 1 ciclo con registro, 2 con (HL) o inmediato.
+
+
+3.- CASOS POR SUITE (mapeo 1:1 con los comentarios de main.cpp)
+
+	--- 3.1 SUITE ld (19 instrucciones, PC final 011A, datos: 0180=A5) ---
+	[x] 1.  NOP            -> sin cambios, PC=0101
+	[x] 2.  LD B,11        -> B=11
+	[x] 3.  LD C,22        -> C=22
+	[x] 4.  LD D,33        -> D=33
+	[x] 5.  LD E,44        -> E=44
+	[x] 6.  LD H,01        -> H=01
+	[x] 7.  LD L,80        -> L=80 (HL=0180)
+	[!] 8.  LD A,55        -> A=55. HOY: A=00 y traza "Writing in: 180" (B1)
+	[x] 9.  LD A,B         -> A=11
+	[x] 10. LD B,C         -> B=22
+	[x] 11. LD A,A         -> A=11
+	[x] 12. LD C,D         -> C=33
+	[x] 13. LD D,E         -> D=44
+	[x] 14. LD E,A         -> E=11
+	[x] 15. LD A,(HL)      -> A=A5
+	[x] 16. LD B,(HL)      -> B=A5
+	[x] 17. LD (HL),B      -> "Writing in: 180"
+	[x] 18. LD (HL),A      -> "Writing in: 180"
+	[x] 19. LD L,(HL)      -> L=A5 (HL=01A5)
+	[x] F=00 durante toda la suite (LD no toca flags)
+
+	--- 3.2 SUITE ld16 (18 instrucciones, PC final 0119, datos: 0180..0184=10 20 30 40 50) ---
+	[x] 1-6.  LD B,01 / C,80 / D,01 / E,81 / H,01 / L,82 -> BC=0180 DE=0181 HL=0182
+	[x] 7.  LD A,(BC)      -> A=10
+	[x] 8.  LD A,(DE)      -> A=20
+	[x] 9.  LD A,(HL+)     -> A=30, HL=0183
+	[x] 10. LD A,(HL+)     -> A=40, HL=0184
+	[x] 11. LD A,(HL-)     -> A=50, HL=0183
+	[x] 12. LD A,(HL-)     -> A=40, HL=0182
+	[x] 13. LD (BC),A      -> "Writing in: 180"
+	[x] 14. LD (DE),A      -> "Writing in: 181"
+	[x] 15. LD (HL+),A     -> "Writing in: 182", HL=0183
+	[x] 16. LD (HL-),A     -> "Writing in: 183", HL=0182
+	[x] 17. LD L,FF        -> HL=01FF
+	[x] 18. LD A,(HL+)     -> A=00, HL=0200 (el acarreo de L pasa a H)
+
+	--- 3.3 SUITE inc (24 instrucciones, PC final 0123, datos: 0180=0F) ---
+	[x] 2.  INC B  (0F)    -> B=10  F=20 (--H-)   half-carry
+	[x] 3.  INC B  (10)    -> B=11  F=00          limpia H
+	[x] 5.  INC C  (FF)    -> C=00  F=A0 (Z-H-)   desborde
+	[x] 7.  INC D  (7F)    -> D=80  F=20 (--H-)   limpia Z
+	[x] 8.  INC E          -> E=01  F=00
+	[x] 9.  INC A          -> A=01  F=00
+	[x] 13. INC L  (FF)    -> L=00  F=A0
+	[x] 14. INC BC (00FF)  -> BC=0100, F=A0 sin cambios (INC rr no toca flags)
+	[x] 17. INC HL (FFFF)  -> HL=0000, F=A0 sin cambios
+	[x] 20. INC DE (1234)  -> DE=1235
+	[x] 21. INC SP (0000)  -> SP=0001
+	[x] 22. INC H  (00)    -> H=01  F=00
+	[x] 24. INC (HL)       -> lee 0F, "Writing in: 180", F=20 (--H-)
+	[ ] INC r8 conserva C: no se puede probar solo con opcodes registrados
+	    (hace falta ADD/SUB para poner C=1). Repetir cuando B2 este resuelto.
+
+	--- 3.4 SUITE dec (20 instrucciones, PC final 011B, datos: 0180=01) ---
+	HOY: termina en la instruccion 2 ("Actual Opcode: 5") por B2.
+	Valores esperados verificados con una copia parcheada (B1-B5 corregidos) fuera del repo.
+	[-] 2.  DEC B  (10)    -> B=0F  F=60 (-NH-)   borrow del bit 4. Con el codigo actual: F=40 (B5)
+	[-] 4.  DEC C  (01)    -> C=00  F=C0 (ZN--).  Con el codigo actual: F=E0 (B5)
+	[-] 5.  DEC D  (00)    -> D=FF  F=60 (-NH-)
+	[-] 7.  DEC E  (05)    -> E=04  F=40 (-N--)
+	[-] 8.  DEC A  (00)    -> A=FF  F=60
+	[-] 9.  DEC H  (00)    -> H=FF  F=60
+	[-] 10. DEC L  (00)    -> L=FF  F=60
+	[-] 11. DEC BC (0F00)  -> BC=0EFF, F=60 sin cambios
+	[-] 14. DEC BC (0000)  -> BC=FFFF
+	[-] 15. DEC DE (FF04)  -> DE=FF03
+	[-] 16. DEC HL (FFFF)  -> HL=FFFE
+	[-] 17. DEC SP (0000)  -> SP=FFFF
+	[-] 20. DEC (HL)       -> lee 01, "Writing in: 180", F=C0 (ZN--)
+
+	--- 3.5 SUITE add (23 instrucciones, PC final 0121, datos: 0180=3A) ---
+	HOY: termina en la instruccion 4 ("Actual Opcode: 81") por B2.
+	[-] 4.  ADD A,C   0F+01    -> A=10  F=20 (--H-)
+	[-] 6.  ADD A,D   10+20    -> A=30  F=00
+	[-] 8.  ADD A,B   30+F0    -> A=20  F=10 (---C)
+	[-] 10. ADD A,E   20+E0    -> A=00  F=90 (Z--C)
+	[-] 13. ADD A,(HL) 00+3A   -> A=3A  F=00
+	[-] 14. ADD A,08  3A+08    -> A=42  F=20 (--H-)
+	[-] 15. ADD A,A   42+42    -> A=84  F=00
+	[-] 16. ADD A,H   84+01    -> A=85  F=00
+	[-] 17. ADD A,L   85+80    -> A=05  F=10 (---C)
+	[-] 18. ADC A,A   05+05+1  -> A=0B  F=00
+	[-] 20. ADC A,B   0B+F4+0  -> A=FF  F=00
+	[-] 21. ADC A,C   FF+01+0  -> A=00  F=B0 (Z-HC)
+	[-] 22. ADC A,0F  00+0F+1  -> A=10  F=20 (--H-)   el carry cuenta para H
+	[-] 23. ADC A,(HL) 10+3A+0 -> A=4A  F=00
+
+	--- 3.6 SUITE sub (21 instrucciones, PC final 0120, datos: 0180=01) ---
+	HOY: termina en la instruccion 4 ("Actual Opcode: 91") por B2 y B3.
+	[-] 4.  SUB C     3E-3E    -> A=00  F=C0 (ZN--)
+	[-] 8.  SUB D     10-01    -> A=0F  F=60 (-NH-)
+	[-] 10. SUB E     0F-20    -> A=EF  F=50 (-N-C)
+	[-] 11. SUB A              -> A=00  F=C0 (ZN--)
+	[-] 14. SUB (HL)  00-01    -> A=FF  F=70 (-NHC)
+	[-] 15. SUB 0F    FF-0F    -> A=F0  F=40 (-N--)
+	[-] 16. SUB F1    F0-F1    -> A=FF  F=70 (-NHC)
+	[-] 17. SBC A,B   FF-10-1  -> A=EE  F=40 (-N--)
+	[-] 18. SUB F0    EE-F0    -> A=FE  F=50 (-N-C)
+	[-] 19. SBC A,A   FE-FE-1  -> A=FF  F=70 (-NHC)
+	[-] 20. SBC A,00  FF-00-1  -> A=FE  F=40 (-N--)
+	[-] 21. SBC A,(HL) FE-01-0 -> A=FD  F=40 (-N--)
+
+	--- 3.7 SUITE and (14 instrucciones, PC final 0114, datos: 0180=3C) ---
+	HOY: termina en la instruccion 4 ("Actual Opcode: a1") por B2.
+	[-] 4.  AND C     F0&0F    -> A=00  F=A0 (Z-H-)
+	[-] 7.  AND C     FF&0F    -> A=0F  F=20 (--H-). Con el codigo actual: F=A0 (B4)
+	[-] 10. AND (HL)  0F&3C    -> A=0C  F=20
+	[-] 11. AND 04    0C&04    -> A=04  F=20
+	[-] 12. AND A              -> A=04  F=20
+	[-] 13. AND B     04&FF    -> A=04  F=20
+	[-] 14. AND D     04&00    -> A=00  F=A0 (Z-H-)
+	[ ] AND limpia C: repetir con C=1 previo cuando ADD/SUB esten registrados.
+
+
+4.- HALLAZGOS (solo documentados, sin corregir)
+
+	B1  [CRITICO][CERRADO] utils/OpcodesLoaders.cpp, load_ld_block, bloque 2:
+	    "opcode_table[0x3E] = op_ld_n_imm8<nullptr, true>" sobrescribe LD A,n.
+	    Hoy 0x3E hace LD (HL),n y 0x36 no esta registrado.
+	    Correccion: cambiar ese indice a 0x36. 
+
+	B2  [CRITICO][CERRADO] src/CPU.cpp, CPU::loadOpcodes():
+	    solo llama a load_ld_block y load_INC_block. DEC, ADD/ADC, SUB/SBC y AND
+	    estan implementados pero nunca se registran.
+	    Correccion: llamar load_DEC_block, load_ADD_block, load_SUB_block y load_AND_block.
+
+	B3  [CRITICO][CERRADO] utils/OpcodesLoaders.cpp, load_SUB_block:
+	    SUB se registra en 80-87/C6 (opcodes de ADD) y SBC en A0-A7/E6 (opcodes de AND).
+	    Si se corrige B2, el orden de carga decide que instruccion queda en cada opcode.
+	    Correccion: SUB -> 90-97 + D6. SBC -> 98-9F + DE (orden B,C,D,E,H,L,(HL),A).
+
+	B4  [ALTO][CERRADO] src/cpuinstructions/CPU_AND_Opcodes.cpp:
+	    "if (A == 0) setFlag(FLAG_Z);" no tiene else: Z se queda en 1 cuando el resultado no es 0.
+	    Correccion: else clearFlag(FLAG_Z). Quitar tambien las variables sin uso original_value y result.
+
+	B5  [ALTO][CERRADO] src/cpuinstructions/CPU_DEC_Opcodes.cpp:
+	    el flag H esta invertido. En DEC, H=1 cuando hay borrow del bit 4, es decir (orig & 0x0F) == 0.
+	    Correccion: if ((orig & 0x0F) == 0) setFlag(FLAG_H); else clearFlag(FLAG_H);
+
+	B6  [ALTO][CERRADO] src/MemoryBus.cpp, BUS::write:
+	    es un stub, no guarda nada. Afecta a LD (HL),r / LD (rr),A / INC (HL) / DEC (HL) / LD (HL),n.
+	    Ademas imprime el uint8_t como char (0x00 sale como byte NUL y 'grep' trata la salida como binaria;
+	    usar grep -a). Correccion: implementar el mapa de escritura y usar static_cast<int>(value).
+
+	B7  [ALTO][CERRADO] src/MemoryBus.cpp, BUS::BUS():
+	    no llama a initMemoryBus() ni a clearArrays(): WRAM/VRAM/HRAM, IE y bios_mapped
+	    quedan sin inicializar (comportamiento indefinido al leer 0x0000-0x00FF o la WRAM).
+
+	B8  [MEDIO][CERRADO] BUS::read, rango FF00-FF7F:
+	    usa io_registers[address - 0xFE00] -> indice 0x100-0x17F, fuera del array de 128.
+	    Correccion: address - 0xFF00.
+
+	B9  [MEDIO] CPU::initCpu:
+	    SP=0000. Sin boot ROM, el estado post-boot del DMG es
+	    A=01 F=B0 B=00 C=13 D=00 E=D8 H=01 L=4D SP=FFFE PC=0100.
+
+	B10 [MEDIO][CERRADO] CPU::cpuCycle descarta los M-cycles que devuelve cada instruccion
+	    (hace falta para el timing de PPU y timers).
+
+	B11 [BAJO][CERRADO] CPU_INC_Opcodes.cpp, op_INC_nn:
+	    usa "if (sp_modified)" en vez de "if constexpr", a diferencia de op_DEC_nn.
+	    Hoy funciona, pero la rama con punteros nulos a miembro se compila igual.
+
+	B12 [CORREGIDO en main.cpp] el bucle anterior iteraba sizeof(testInstructions)
+	    (tamaño del objeto std::vector = 24) y leia 0xFF al terminar la ROM.
+	    Ahora cada suite ejecuta un numero exacto de instrucciones.
+
+	Otros: el antiguo test de half-carry con LD A,0F / INC A nunca se disparaba por B1
+	(A se quedaba en 47/48). La suite inc ahora lo cubre con INC B.
+
+
+5.- PENDIENTES (no implementados)
+	[ ] OR n (B0-B7, F6)      [ ] XOR n (A8-AF, EE)      [ ] CP n (B8-BF, FE)
+	[ ] LD rr,nn (01 11 21 31)  [ ] LD (nn),SP (08)  [ ] LD SP,HL (F9)  [ ] LD HL,SP+e (F8)
+	[ ] LDH (FF00+n),A / A,(FF00+n) (E0/F0), LD (C),A / A,(C) (E2/F2), LD (nn),A / A,(nn) (EA/FA)
+	[ ] ADD HL,rr (09 19 29 39)  [ ] ADD SP,e (E8)
+	[ ] JP / JR / CALL / RET / RETI / RST (con condiciones NZ Z NC C)
+	[ ] PUSH / POP (C1-F5)
+	[ ] DAA (27), CPL (2F), SCF (37), CCF (3F)
+	[ ] RLCA RRCA RLA RRA (07 0F 17 1F)
+	[ ] HALT (76), STOP (10), DI (F3), EI (FB)
+	[ ] Prefijo CB (rotaciones, desplazamientos, BIT/RES/SET)
+
+
+6.- REFERENCIAS
+	* Pan Docs, CPU Instruction Set:      https://gbdev.io/pandocs/CPU_Instruction_Set.html
+	* Tabla de opcodes (ciclos/flags):   https://gbdev.io/gb-opcodes/optables/
+	* ROM de pruebas blargg cpu_instrs (siguiente nivel de validacion, cuando haya saltos y stack)

@@ -41,7 +41,7 @@ template int CPU::op_INC_n<nullptr, true>();
 // ========================= Instruccion INC nn ===============================
 template<std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, bool sp_modified>
 int CPU::op_INC_nn() {
-  if (sp_modified) {
+  if constexpr (sp_modified) {
     SP++;
     return 2;
   }
