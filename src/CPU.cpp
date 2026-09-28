@@ -59,7 +59,7 @@ void CPU::loadOpcodes() {
   OpcodeLoaders::load_DEC_block(*this);
   OpcodeLoaders::load_ADD_block(*this);
   OpcodeLoaders::load_SUB_block(*this);
-  OpcodeLoaders::load_AND_block(*this); 
+  OpcodeLoaders::load_LOGICAL_block(*this); 
 }
 
 int CPU::b_illegal_opcode() {

@@ -13,6 +13,7 @@ private:
   // Special Registers
   std::uint16_t PC, SP;
   int MCycles;
+  void initCpu();
   // ============================== Opcodes data ============================================= 
   std::uint8_t current_opcode;
   using InstructionFunc = int (CPU::*)();
@@ -27,7 +28,6 @@ private:
   static const Reg8Ptr mapa_registros[8];
   std::uint16_t getPairedRegisters(std::uint8_t x_value, std::uint8_t y_value);
   void setPairedRegisters(std::uint8_t& x_reg, std::uint8_t& y_reg, std::uint16_t value);
-  void initCpu();
   // ============================== CPU-INSTRUCTIONS =============================================
   template<std::uint8_t CPU::*registro_destino, bool hl_modified>
   int op_ld_n_imm8();
@@ -55,6 +55,8 @@ private:
   int op_SBC_A_n();
   template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
   int op_AND_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_OR_n();
   int op_ld_r1_r2();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();
@@ -74,7 +76,7 @@ private:
   friend void OpcodeLoaders::load_DEC_block(CPU& cpu);
   friend void OpcodeLoaders::load_ADD_block(CPU &cpu);
   friend void OpcodeLoaders::load_SUB_block(CPU &cpu);
-  friend void OpcodeLoaders::load_AND_block(CPU &cpu);
+  friend void OpcodeLoaders::load_LOGICAL_block(CPU &cpu);
 
 public:
   void loadOpcodes();

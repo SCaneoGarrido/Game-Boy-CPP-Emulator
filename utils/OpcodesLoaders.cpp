@@ -63,14 +63,14 @@ void OpcodeLoaders::load_ld_block(CPU &cpu) {
   // 3. CARGA DE REGISTROS DE 16 BITS INDIRECTOS
   // ===========================================================================
   // Lecturas: LD A, (rr)
-  cpu.opcode_table[0x0A] = &CPU::op_ld_reg16_indirect<false, &CPU::B, &CPU::C, 0>;
-  cpu.opcode_table[0x1A] = &CPU::op_ld_reg16_indirect<false, &CPU::D, &CPU::E, 0>;
+  cpu.opcode_table[0x0A] = &CPU::op_ld_reg16_indirect<false, &CPU::B, &CPU::C, 0>; // LD A, BC
+  cpu.opcode_table[0x1A] = &CPU::op_ld_reg16_indirect<false, &CPU::D, &CPU::E, 0>; // LD A, DE
   cpu.opcode_table[0x2A] = &CPU::op_ld_reg16_indirect<false, &CPU::H, &CPU::L, 1>; // (HL+)
   cpu.opcode_table[0x3A] = &CPU::op_ld_reg16_indirect<false, &CPU::H, &CPU::L, 2>; // (HL-)
 
   // Escrituras: LD (rr), A
-  cpu.opcode_table[0x02] = &CPU::op_ld_reg16_indirect<true, &CPU::B, &CPU::C, 0>;
-  cpu.opcode_table[0x12] = &CPU::op_ld_reg16_indirect<true, &CPU::D, &CPU::E, 0>;
+  cpu.opcode_table[0x02] = &CPU::op_ld_reg16_indirect<true, &CPU::B, &CPU::C, 0>;  // LD BC, A
+  cpu.opcode_table[0x12] = &CPU::op_ld_reg16_indirect<true, &CPU::D, &CPU::E, 0>;  // LD DE, A
   cpu.opcode_table[0x22] = &CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 1>;  // (HL+)
   cpu.opcode_table[0x32] = &CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 2>;  // (HL-)
 }
@@ -131,7 +131,7 @@ void OpcodeLoaders::load_SUB_block(CPU &cpu) {
   //cpu.opcode_table[0xE6] = &CPU::op_SBC_A_n<nullptr, false, true>; // existe ? 
 }
 
-void OpcodeLoaders::load_AND_block(CPU &cpu) {
+void OpcodeLoaders::load_LOGICAL_block(CPU &cpu) {
   // ===========================================================================
   // 1. CARGA DE AND n
   // ===========================================================================
@@ -143,7 +143,22 @@ void OpcodeLoaders::load_AND_block(CPU &cpu) {
   cpu.opcode_table[0xA4] = &CPU::op_AND_n<&CPU::H, false, false>;
   cpu.opcode_table[0xA5] = &CPU::op_AND_n<&CPU::L, false, false>;
   cpu.opcode_table[0xA6] = &CPU::op_AND_n<nullptr, true, false>;
-  cpu.opcode_table[0xE6] = &CPU::op_AND_n<nullptr, false, true>;
+  cpu.opcode_table[0xE6] = &CPU::op_AND_n<nullptr, false, true>;  
+  // ===========================================================================
+  // 2. CARGA DE OR n
+  // ===========================================================================
+  cpu.opcode_table[0xB7] = &CPU::op_OR_n<&CPU::A, false, false>;
+  cpu.opcode_table[0xB0] = &CPU::op_OR_n<&CPU::B, false, false>;
+  cpu.opcode_table[0xB1] = &CPU::op_OR_n<&CPU::C, false, false>;
+  cpu.opcode_table[0xB2] = &CPU::op_OR_n<&CPU::D, false, false>;
+  cpu.opcode_table[0xB3] = &CPU::op_OR_n<&CPU::E, false, false>;
+  cpu.opcode_table[0xB4] = &CPU::op_OR_n<&CPU::H, false, false>;
+  cpu.opcode_table[0xB5] = &CPU::op_OR_n<&CPU::L, false, false>;
+  cpu.opcode_table[0xB6] = &CPU::op_OR_n<nullptr, true, false>;
+  cpu.opcode_table[0xF6] = &CPU::op_OR_n<nullptr, false, true>;
+  // ===========================================================================
+  // 3. CARGA DE XOR n
+  // ===========================================================================
 }
 
 void OpcodeLoaders::load_INC_block(CPU &cpu) {
