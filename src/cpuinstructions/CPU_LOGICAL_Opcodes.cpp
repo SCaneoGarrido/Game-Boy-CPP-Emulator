@@ -1,6 +1,5 @@
 #include "../../include/CPU.h"
 #include <cstdint>
-#include <execution>
 
 // ========================= Instruccion AND n ===============================
 template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>

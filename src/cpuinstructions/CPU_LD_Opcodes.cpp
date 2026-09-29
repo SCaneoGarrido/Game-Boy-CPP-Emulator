@@ -96,5 +96,54 @@ template int CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 1>(); // Opcode 0
 template int CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 2>(); // Opcode 0x32 (HL-) LD (HL-), A
 
 
+// ============================== LD A, (C) - LD (C), A =============================================
+int CPU::op_ld_a_C() { // Opcode 0xF2: LD A, (C)
+  std::uint16_t direction = 0xFF00 + C;
+  A = bus.read(direction);
+  return 2;
+}
 
+int CPU::op_ld_c_a() { // Opcode 0xE2: LD (C), A
+  std::uint16_t direction = 0xFF00 + C;
+  bus.write(direction, A);
+  return 2;
+}
+
+// ============================== LDH (n), A - LD A, (n) =============================================
+int CPU::op_ldh_n_a() { // Opcode 0xE0: LDH (a8), A
+  std::uint8_t n_value = bus.read(PC);
+  PC++;
+  std::uint16_t direction = 0xFF00 + n_value;
+  bus.write(direction, A);
+  return 3;
+}
+
+int CPU::op_ldh_a_n() { // Opcode 0xF0: LDH A, (a8)
+  std::uint8_t n_value = bus.read(PC);
+  PC++;
+  std::uint16_t direction = 0xFF00 + n_value;
+  A = bus.read(direction);
+  return 3;
+}
+
+// ============================== LD A, a16 - LD a16, A =============================================
+int CPU::op_ld_a16_a() { // Opcode 0xEA: LD (a16), A
+  std::uint8_t low_bits = bus.read(PC);
+  PC++;
+  std::uint8_t high_bits = bus.read(PC);
+  PC++;
+  std::uint16_t direction = (high_bits << 8) | low_bits;
+  bus.write(direction, A);
+  return 4;
+}
+
+int CPU::op_ld_a_a16() { // Opcode 0xFA: LD A, (a16)
+  std::uint8_t low_bits = bus.read(PC);
+  PC++;
+  std::uint8_t high_bits = bus.read(PC);
+  PC++;
+  std::uint16_t direction = (high_bits << 8) | low_bits;
+  A = bus.read(direction);
+  return 4;
+}
 

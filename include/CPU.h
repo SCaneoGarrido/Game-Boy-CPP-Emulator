@@ -61,7 +61,14 @@ private:
   int op_XOR_n();
   template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
   int op_CP_n();
+  // ============================== ORDINARY CPU-INSTRUCTIONS =============================================
   int op_ld_r1_r2();
+  int op_ld_a_C(); // direccionamiento por registro C
+  int op_ld_c_a();
+  int op_ldh_n_a();
+  int op_ldh_a_n();
+  int op_ld_a16_a();
+  int op_ld_a_a16();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();
   int b_stop();

@@ -73,6 +73,15 @@ void OpcodeLoaders::load_ld_block(CPU &cpu) {
   cpu.opcode_table[0x12] = &CPU::op_ld_reg16_indirect<true, &CPU::D, &CPU::E, 0>;  // LD  (DE),  A
   cpu.opcode_table[0x22] = &CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 1>;  // LD  (HL+), A
   cpu.opcode_table[0x32] = &CPU::op_ld_reg16_indirect<true, &CPU::H, &CPU::L, 2>;  // LD  (HL-), A
+  // ===========================================================================
+  // 4. CARGA DE INSTRUCCIONES ESPECIALES DE I/O Y DIRECCIONAMIENTO ABSOLUTO (8-bit)
+  // ===========================================================================
+  cpu.opcode_table[0xE2] = &CPU::op_ld_c_a;   // LD (C), A   - Escribe A en $FF00 + C
+  cpu.opcode_table[0xF2] = &CPU::op_ld_a_C;   // LD A, (C)   - Lee desde $FF00 + C hacia A
+  cpu.opcode_table[0xE0] = &CPU::op_ldh_n_a;  // LDH (a8), A - Escribe A en $FF00 + inmediato d8
+  cpu.opcode_table[0xF0] = &CPU::op_ldh_a_n;  // LDH A, (a8) - Lee desde $FF00 + inmediato d8 hacia A
+  cpu.opcode_table[0xEA] = &CPU::op_ld_a16_a; // LD (a16), A - Escribe A en dirección absoluta de 16 bits
+  cpu.opcode_table[0xFA] = &CPU::op_ld_a_a16; // LD A, (a16) - Lee desde dirección absoluta de 16 bits hacia A
 }
 
 void OpcodeLoaders::load_ADD_block(CPU &cpu) {
