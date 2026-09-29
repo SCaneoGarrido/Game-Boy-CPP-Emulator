@@ -57,6 +57,10 @@ private:
   int op_AND_n();
   template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
   int op_OR_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_XOR_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
+  int op_CP_n();
   int op_ld_r1_r2();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();
