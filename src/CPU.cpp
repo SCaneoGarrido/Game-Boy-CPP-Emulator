@@ -59,7 +59,8 @@ void CPU::loadOpcodes() {
   OpcodeLoaders::load_DEC_block(*this);
   OpcodeLoaders::load_ADD_block(*this);
   OpcodeLoaders::load_SUB_block(*this);
-  OpcodeLoaders::load_LOGICAL_block(*this); 
+  OpcodeLoaders::load_LOGICAL_block(*this);
+  OpcodeLoaders::load_LD16BITS_block(*this);
 }
 
 int CPU::b_illegal_opcode() {
@@ -84,11 +85,7 @@ void CPU::setPairedRegisters(std::uint8_t &x_reg, std::uint8_t &y_reg,
   x_reg = (value >> 8) & 0xFF; // Saco 8 bit superiores
   y_reg = value & 0xFF;        // Saco 8 bits inferiores
 }
-/*
-std::uint16_t CPU::getHlDirection() {
-  return (H << 8) | L;
-}
-*/
+
 void CPU::setFlag(std::uint8_t mask) {
   F = F | mask;
   F = F & 0XF0; // los ultimos 4 bits son 0

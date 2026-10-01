@@ -84,6 +84,31 @@ void OpcodeLoaders::load_ld_block(CPU &cpu) {
   cpu.opcode_table[0xFA] = &CPU::op_ld_a_a16; // LD A, (a16) - Lee desde dirección absoluta de 16 bits hacia A
 }
 
+void OpcodeLoaders::load_LD16BITS_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE LD n, nn
+  // ===========================================================================
+  cpu.opcode_table[0x01] = &CPU::op_LD16b_n_imm16<&CPU::B, &CPU::C, false>;  // LD   BC, d16
+  cpu.opcode_table[0x11] = &CPU::op_LD16b_n_imm16<&CPU::D, &CPU::E, false>;  // LD   DE, d16
+  cpu.opcode_table[0x21] = &CPU::op_LD16b_n_imm16<&CPU::H, &CPU::L, false>;  // LD   HL, d16
+  cpu.opcode_table[0x31] = &CPU::op_LD16b_n_imm16<nullptr, nullptr, true>;   // LD   SP, d16
+  // ================================== Operacion LD SP, HL ==================================
+  cpu.opcode_table[0xF9] = &CPU::op_ld_sp_hl;
+  // ===========================================================================
+  // 2. CARGA DE PUSH nn
+  // ===========================================================================
+  cpu.opcode_table[0xF5] = &CPU::op_PUSH_nn<&CPU::A, &CPU::F>;  // PUSH AF, SP
+  cpu.opcode_table[0xC5] = &CPU::op_PUSH_nn<&CPU::B, &CPU::C>;  // PUSH BC, SP
+  cpu.opcode_table[0xD5] = &CPU::op_PUSH_nn<&CPU::D, &CPU::E>;  // PUSH DE, SP
+  cpu.opcode_table[0xE5] = &CPU::op_PUSH_nn<&CPU::H, &CPU::L>;  // PUSH HL, SP
+  // ===========================================================================
+  // 3. CARGA DE POP nn
+  // ===========================================================================
+  cpu.opcode_table[0xF1] = &CPU::op_POP_nn<&CPU::A, &CPU::F>;  // POP AF, SP
+  cpu.opcode_table[0xC1] = &CPU::op_POP_nn<&CPU::B, &CPU::C>;  // POP BC, SP
+  cpu.opcode_table[0xD1] = &CPU::op_POP_nn<&CPU::D, &CPU::E>;  // POP DE, SP
+  cpu.opcode_table[0xE1] = &CPU::op_POP_nn<&CPU::H, &CPU::L>;  // POP HL, SP
+}
 void OpcodeLoaders::load_ADD_block(CPU &cpu) {
   // ===========================================================================
   // 1. CARGA DE ADD A, n

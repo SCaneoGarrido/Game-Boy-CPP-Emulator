@@ -2,7 +2,6 @@
 #define CPU_H
 #include "../include/MemoryBus.h"
 #include "OpcodeLoaders.h"
-
 #include <cstdint>
 class CPU;
 
@@ -61,7 +60,13 @@ private:
   int op_XOR_n();
   template<std::uint8_t CPU::*registro, bool hl_modified, bool is_imm8>
   int op_CP_n();
-  // ============================== ORDINARY CPU-INSTRUCTIONS =============================================
+  template<std::uint8_t CPU::*xregistro, std::uint8_t CPU::*yregistro, bool sp_modified>
+  int op_LD16b_n_imm16();
+  template<std::uint8_t CPU::*hregistro, std::uint8_t CPU::*lregistro>
+  int op_PUSH_nn();
+  template<std::uint8_t CPU::*hregistro, std::uint8_t CPU::*lregistro>
+  int op_POP_nn();
+  // ============================== NO TEMPLATE CPU-INSTRUCTIONS =============================================
   int op_ld_r1_r2();
   int op_ld_a_C(); // direccionamiento por registro C
   int op_ld_c_a();
@@ -72,7 +77,9 @@ private:
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
   int b_nop();
   int b_stop();
-  // =======================================================================================
+  int op_ld_sp_hl();
+  int op_ldhl_sp_n();
+  int op_ldnn_sp(); // LD (nn) SP
   // ================================== FLAGS LOGICS =======================================
   void setFlag(std::uint8_t mask);
   void clearFlag(std::uint8_t mask);
@@ -88,7 +95,7 @@ private:
   friend void OpcodeLoaders::load_ADD_block(CPU &cpu);
   friend void OpcodeLoaders::load_SUB_block(CPU &cpu);
   friend void OpcodeLoaders::load_LOGICAL_block(CPU &cpu);
-
+  friend void OpcodeLoaders::load_LD16BITS_block(CPU &cpu);
 public:
   void loadOpcodes();
   CPU(BUS& _bus); // aqui necesitmaos pasar por referencia el BUS de memoria

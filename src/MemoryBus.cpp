@@ -81,5 +81,52 @@ std::uint8_t BUS::read(std::uint16_t address) {
 void BUS::write(std::uint16_t address, std::uint8_t value) {
   std::cout << "Writing in: " << std::hex << static_cast<int>(address) << std::endl;
   std::cout << "Value: " << std::hex << static_cast<int>(value) << std::endl;
-  // QUEDA PENDIENTE HASTA TENER MAS COMPONETNES QUE LO USEN.
+ 
+  // 1. ROM del Cartucho (SÓLO LECTURA - Bloqueamos la escritura por ahora)
+  if (address >= 0x0000 && address <= 0x7FFF) {
+    // Los juegos escriben aquí para controlar los MBC (bancos), déjalo vacío de momento.
+    return;
+  }
+  
+  // 2. VRAM (Memoria de vídeo)
+  else if (address >= 0x8000 && address <= 0x9FFF) {
+    vram[address - 0x8000] = value;
+  }
+  
+  // 3. WRAM
+  // Cubre el rango normal (0xC000-0xDFFF) y su espejo Echo RAM (0xE000-0xFDFF)
+  else if (address >= 0xC000 && address <= 0xFDFF) {
+    // Usamos una máscara 0x1FFF (8191 decimal) para que tanto la WRAM como su espejo 
+    // apunten perfectamente dentro de tu arreglo de 8192 bytes.
+    wram[address & 0x1FFF] = value;
+  }
+  
+  // 4. OAM (Object Attribute Memory - Atributos de Sprites)
+  else if (address >= 0xFE00 && address <= 0xFE9F) {
+    oam[address - 0xFE00] = value;
+  }
+  
+  // 5. Zona no permitida / Prohibida en hardware real (0xFEA0 - 0xFEFF)
+  else if (address >= 0xFEA0 && address <= 0xFEFF) {
+    return; 
+  }
+  
+  // 6. Registros de I/O (Joypad, Timers, Sonido...)
+  else if (address >= 0xFF00 && address <= 0xFF7F) {
+    if (address == 0xFF50) {
+      // Registro especial para apagar la BIOS/Boot ROM
+      bios_mapped = false; 
+    }
+    io_registers[address - 0xFF00] = value;
+  }
+  
+  // 7. HRAM (High RAM - Memoria rápida de la pila)
+  else if (address >= 0xFF80 && address <= 0xFFFE) {
+    hram[address - 0xFF80] = value;
+  }
+  
+  // 8. IE (Interrupt Enable Register)
+  else if (address == 0xFFFF) {
+    IE = value;
+  }
 }

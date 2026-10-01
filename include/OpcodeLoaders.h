@@ -8,7 +8,11 @@ namespace OpcodeLoaders {
   void load_DEC_block(CPU& cpu);
   void load_ADD_block(CPU& cpu);
   void load_SUB_block(CPU& cpu);
-  void load_LOGICAL_block(CPU& cpu); }
+  void load_LOGICAL_block(CPU& cpu);
+  void load_LD16BITS_block(CPU& cpu);
+}
+
+
 #endif // !OPCODELOADERS_H
 
 
