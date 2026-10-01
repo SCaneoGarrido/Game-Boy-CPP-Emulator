@@ -1,0 +1,7 @@
+• Lees low_bits de PC y haces PC++ [D6].
+• Lees high_bits de PC y haces PC++ [D6].
+• Armas la dirección de 16 bits (target_address) uniendo ambos bytes [D6].
+• Separas tu SP actual en su byte bajo (SP & 0xFF) y su byte alto ((SP >> 8) & 0xFF)Hh
+• Escribes el byte bajo en target_address [D6].
+• Escrsbes el byte alto en target_address + 1 D6].
+
