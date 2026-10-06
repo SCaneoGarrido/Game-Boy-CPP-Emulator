@@ -66,6 +66,8 @@ private:
   int op_PUSH_nn();
   template<std::uint8_t CPU::*hregistro, std::uint8_t CPU::*lregistro>
   int op_POP_nn();
+  template<std::uint8_t CPU::*hregistro, std::uint8_t CPU::*lregistro, bool sp_modified>
+  int op_ADD16BIT_HL_n();
   // ============================== NO TEMPLATE CPU-INSTRUCTIONS =============================================
   int op_ld_r1_r2();
   int op_ld_a_C(); // direccionamiento por registro C
@@ -88,6 +90,8 @@ private:
   bool checkCarryAdd(std::uint16_t a, std::uint16_t b, std::uint16_t carry);
   bool checkHalfCarrySub(std::uint8_t a, std::uint8_t b, std::uint8_t carry);
   bool checkCarrySub(std::uint16_t a, std::uint16_t b, std::uint16_t carry);
+  bool check16bitHalfCarryAdd(std::uint16_t a, std::uint16_t b);
+  bool check16bitCarryAdd(std::uint16_t a, std::uint16_t b);
   // =================================== Friend functions =================================
   friend void OpcodeLoaders::load_ld_block(CPU& cpu);
   friend void OpcodeLoaders::load_INC_block(CPU& cpu);
@@ -96,6 +100,7 @@ private:
   friend void OpcodeLoaders::load_SUB_block(CPU &cpu);
   friend void OpcodeLoaders::load_LOGICAL_block(CPU &cpu);
   friend void OpcodeLoaders::load_LD16BITS_block(CPU &cpu);
+  friend void OpcodeLoaders::load_ADD16BITS_block(CPU &cpu);
 public:
   void loadOpcodes();
   CPU(BUS& _bus); // aqui necesitmaos pasar por referencia el BUS de memoria

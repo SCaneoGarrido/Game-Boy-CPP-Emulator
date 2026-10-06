@@ -259,4 +259,13 @@ void OpcodeLoaders::load_DEC_block(CPU &cpu) {
 
 }
 
+void OpcodeLoaders::load_ADD16BITS_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE ADD HL, n
+  // ===========================================================================
+  cpu.opcode_table[0x09] = &CPU::op_ADD16BIT_HL_n<&CPU::B, &CPU::C, false>;  // ADD HL, BC 
+  cpu.opcode_table[0x19] = &CPU::op_ADD16BIT_HL_n<&CPU::D, &CPU::E, false>;  // ADD HL, DE 
+  cpu.opcode_table[0x29] = &CPU::op_ADD16BIT_HL_n<&CPU::H, &CPU::L, false>;  // ADD HL, HL 
+  cpu.opcode_table[0x39] = &CPU::op_ADD16BIT_HL_n<nullptr, nullptr, true>;   // ADD HL, SP 
+}
 

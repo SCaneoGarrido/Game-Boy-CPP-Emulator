@@ -99,7 +99,7 @@ void CPU::clearFlag(std::uint8_t mask) {
 
 bool CPU::getFlag(std::uint8_t mask) { return (F & mask) != 0; }
 
-// Operaciones de suma
+// Validaciones de flags de 8 BIT
 bool CPU::checkHalfCarryAdd(std::uint8_t a, std::uint8_t b,
                             std::uint8_t carry) {
   return ((a & 0x0F) + (b & 0x0F) + carry) > 0x0F;
@@ -109,17 +109,25 @@ bool CPU::checkCarryAdd(std::uint16_t a, std::uint16_t b, std::uint16_t carry) {
   return (a + b + carry) > 0xFF;
 }
 
-// Operaciones de substraccion
 bool CPU::checkHalfCarrySub(std::uint8_t a, std::uint8_t b,
                             std::uint8_t carry) {
   return ((a & 0x0F) - (b & 0x0F) - carry) < 0;
 }
 
-// Devuelve true si el valor a restar es mayor que el que tenemos (resultado <
-// 0)
 bool CPU::checkCarrySub(std::uint16_t a, std::uint16_t b, std::uint16_t carry) {
   return a < (b + carry);
 }
+// ============================================================================
+// Validaciones de banderas en 16 bits
+bool CPU::check16bitCarryAdd(std::uint16_t a, std::uint16_t b) {
+  std::uint32_t result = a + b;
+  return result > 0xFFFF;
+}
+
+bool CPU::check16bitHalfCarryAdd(std::uint16_t a, std::uint16_t b) {
+   return ((a & 0x0FFF) + (b & 0x0FFF)) > 0x0FFF;
+}
+
 
 void CPU::showCPUINFO() {
   bool opcode_is_loaded =

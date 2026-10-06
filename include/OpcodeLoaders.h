@@ -10,6 +10,7 @@ namespace OpcodeLoaders {
   void load_SUB_block(CPU& cpu);
   void load_LOGICAL_block(CPU& cpu);
   void load_LD16BITS_block(CPU& cpu);
+  void load_ADD16BITS_block(CPU& cpu);
 }
 
 
