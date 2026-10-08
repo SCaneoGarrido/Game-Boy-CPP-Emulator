@@ -1,0 +1,49 @@
+============================== CHECKLIST SUITE inc ==============================
+Suite:      INC r8, INC (HL), INC rr / INC SP
+Opcodes:    04 0C 14 1C 24 2C 3C, 34, 03 13 23 33
+Flags:      INC r8 / (HL): Z 0 H -  (C se conserva).  INC rr: ninguno
+Test:       testing/inc/test_inc.cpp (26 pasos)
+Estado:     08/10/2026 -> 26/26 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^inc$' --output-on-failure
+	./build/testing/test_inc        -> PASS/FAIL por paso + resumen
+	./build/testing/test_inc -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=0F. INC (HL) apunta a ROM: lee 0F, la escritura se descarta (la persistencia se prueba en mem).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,0F                            -> B=0F  PC=0102
+	[x]  2. INC B  0F->10 half-carry           -> B=10  F=20 (--H-)  PC=0103
+	[x]  3. INC B  10->11 limpia H             -> B=11  F=00 (----)  PC=0104
+	[x]  4. LD C,FF                            -> C=FF  PC=0106
+	[x]  5. INC C  FF->00 desborde             -> C=00  F=A0 (Z-H-)  PC=0107
+	[x]  6. LD D,7F                            -> D=7F  PC=0109
+	[x]  7. INC D  7F->80 limpia Z             -> D=80  F=20 (--H-)  PC=010A
+	[x]  8. INC E                              -> E=01  F=00 (----)  PC=010B
+	[x]  9. INC A                              -> A=01  F=00 (----)  PC=010C
+	[x] 10. LD B,00                            -> BC=0000  PC=010E
+	[x] 11. LD C,FF                            -> BC=00FF  PC=0110
+	[x] 12. LD L,FF                            -> L=FF  PC=0112
+	[x] 13. INC L  FF->00                      -> L=00  F=A0 (Z-H-)  PC=0113
+	[x] 14. INC BC 00FF->0100 sin flags        -> BC=0100  F=A0 (Z-H-)  PC=0114
+	[x] 15. LD H,FF                            -> H=FF  PC=0116
+	[x] 16. LD L,FF                            -> HL=FFFF  PC=0118
+	[x] 17. INC HL FFFF->0000 sin flags        -> HL=0000  F=A0 (Z-H-)  PC=0119
+	[x] 18. LD D,12                            -> D=12  PC=011B
+	[x] 19. LD E,34                            -> DE=1234  PC=011D
+	[x] 20. INC DE                             -> DE=1235  F=A0 (Z-H-)  PC=011E
+	[x] 21. INC SP                             -> SP=0001  F=A0 (Z-H-)  PC=011F
+	[x] 22. INC H  00->01                      -> H=01  F=00 (----)  PC=0120
+	[x] 23. LD L,80                            -> HL=0180  PC=0122
+	[x] 24. INC (HL) 0F->10, ROM protegida     -> F=20 (--H-)  (0180)=0F  PC=0123
+	[x] 25. SUB 02  01-02 -> C=1               -> A=FF  F=70 (-NHC)  PC=0125
+	[x] 26. INC A  FF->00 conserva C           -> A=00  F=B0 (Z-HC)  PC=0126
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* Ninguno abierto.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

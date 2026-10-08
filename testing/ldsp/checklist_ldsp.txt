@@ -1,0 +1,29 @@
+============================== CHECKLIST SUITE ldsp ==============================
+Suite:      LD (a16),SP y LD HL,SP+e8
+Opcodes:    08, F8
+Flags:      LD (a16),SP: ninguno.  LD HL,SP+e8: 0 0 H C (H/C del byte bajo sin signo; SP no cambia)
+Test:       testing/ldsp/test_ldsp.cpp (6 pasos)
+Estado:     08/10/2026 -> 6/6 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^ldsp$' --output-on-failure
+	./build/testing/test_ldsp        -> PASS/FAIL por paso + resumen
+	./build/testing/test_ldsp -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. LD (a16),SP escribe en WRAM C000/C001 (little endian).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD SP,FFF8                         -> SP=FFF8  PC=0103
+	[x]  2. LD (C000),SP                       -> (C000)=F8  (C001)=FF  SP=FFF8  PC=0106
+	[x]  3. LD HL,SP+8   FFF8+08               -> HL=0000  SP=FFF8  F=30 (--HC)  PC=0108
+	[x]  4. LD HL,SP-1   FFF8+FF               -> HL=FFF7  SP=FFF8  F=30 (--HC)  PC=010A
+	[x]  5. LD SP,1000                         -> SP=1000  PC=010D
+	[x]  6. LD HL,SP-128 1000+80               -> HL=0F80  SP=1000  F=00 (----)  PC=010F
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* A5 [CERRADO 08/10/2026] 0x08 y 0xF8 registrados en load_LD16BITS_block.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

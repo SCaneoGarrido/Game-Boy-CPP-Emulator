@@ -1,0 +1,45 @@
+============================== CHECKLIST SUITE logic ==============================
+Suite:      OR n, XOR n, CP n
+Opcodes:    B0-B7 F6, A8-AF EE, B8-BF FE
+Flags:      OR/XOR: Z 0 0 0.  CP: Z 1 H C (como SUB, pero A no cambia)
+Test:       testing/logic/test_logic.cpp (22 pasos)
+Estado:     08/10/2026 -> 22/22 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^logic$' --output-on-failure
+	./build/testing/test_logic        -> PASS/FAIL por paso + resumen
+	./build/testing/test_logic -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=5A. CP FF se usa para poner C=1 y comprobar que OR/XOR lo limpian.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,F0                            -> B=F0  PC=0102
+	[x]  2. LD A,B                             -> A=F0  PC=0103
+	[x]  3. LD C,0F                            -> C=0F  PC=0105
+	[x]  4. OR C      F0|0F                    -> A=FF  F=00 (----)  PC=0106
+	[x]  5. XOR C     FF^0F                    -> A=F0  F=00 (----)  PC=0107
+	[x]  6. XOR B     F0^F0                    -> A=00  F=80 (Z---)  PC=0108
+	[x]  7. OR A      00|00                    -> A=00  F=80 (Z---)  PC=0109
+	[x]  8. OR 0F     00|0F                    -> A=0F  F=00 (----)  PC=010B
+	[x]  9. XOR FF    0F^FF                    -> A=F0  F=00 (----)  PC=010D
+	[x] 10. LD H,01                            -> H=01  PC=010F
+	[x] 11. LD L,80                            -> HL=0180  PC=0111
+	[x] 12. OR (HL)   F0|5A                    -> A=FA  F=00 (----)  PC=0112
+	[x] 13. XOR (HL)  FA^5A                    -> A=A0  F=00 (----)  PC=0113
+	[x] 14. CP A0     A0=A0                    -> A=A0  F=C0 (ZN--)  PC=0115
+	[x] 15. CP B      A0<F0 borrow             -> A=A0  F=50 (-N-C)  PC=0116
+	[x] 16. CP C      A0-0F half-borrow        -> A=A0  F=60 (-NH-)  PC=0117
+	[x] 17. CP (HL)   A0-5A half-borrow        -> A=A0  F=60 (-NH-)  PC=0118
+	[x] 18. CP A                               -> A=A0  F=C0 (ZN--)  PC=0119
+	[x] 19. CP FF     -> C=1                   -> A=A0  F=70 (-NHC)  PC=011B
+	[x] 20. OR B      A0|F0 limpia C           -> A=F0  F=00 (----)  PC=011C
+	[x] 21. CP FF     -> C=1                   -> A=F0  F=70 (-NHC)  PC=011E
+	[x] 22. XOR A     limpia C, Z=1            -> A=00  F=80 (Z---)  PC=011F
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* Ninguno abierto.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

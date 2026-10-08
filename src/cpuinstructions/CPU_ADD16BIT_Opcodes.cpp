@@ -29,3 +29,32 @@ template int CPU::op_ADD16BIT_HL_n<&CPU::B, &CPU::C, false>(); // Opcode 0x09 AD
 template int CPU::op_ADD16BIT_HL_n<&CPU::D, &CPU::E, false>(); // Opcode 0x19 ADD HL, DE
 template int CPU::op_ADD16BIT_HL_n<&CPU::H, &CPU::L, false>(); // Opcode 0x29 ADD HL, HL
 template int CPU::op_ADD16BIT_HL_n<nullptr, nullptr, true>();  // Opcode 0x39 ADD HL, SP
+
+int CPU::op_ADD16bit_sp_n() {
+  std::uint8_t raw_data = bus.read(PC);
+  PC++;
+  std::uint16_t extended_raw_data = static_cast<std::uint16_t>(raw_data);
+  bool bit7 = (extended_raw_data & (1 << 7)) != 0;
+  if (bit7) {
+    extended_raw_data |= 0xFF00;
+  }
+  std::uint16_t result = static_cast<std::uint16_t>(SP + extended_raw_data);
+  clearFlag(FLAG_Z);
+  clearFlag(FLAG_N);
+
+  if ((SP & 0x000F) + (raw_data & 0x0F) > 0x0F) {
+    setFlag(FLAG_H);
+  } else {
+    clearFlag(FLAG_H);
+  }
+
+  if ((SP & 0x00FF) + (raw_data) > 0xFF) {
+    setFlag(FLAG_C);
+  } else {
+    clearFlag(FLAG_C);
+  }
+  
+  SP = result;
+
+  return 4;
+}

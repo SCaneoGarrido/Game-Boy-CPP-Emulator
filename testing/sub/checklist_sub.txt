@@ -1,0 +1,44 @@
+============================== CHECKLIST SUITE sub ==============================
+Suite:      SUB n y SBC A,n
+Opcodes:    90-97 D6, 98-9F DE
+Flags:      Z 1 H C  (SBC resta tambien el carry previo)
+Test:       testing/sub/test_sub.cpp (21 pasos)
+Estado:     08/10/2026 -> 21/21 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^sub$' --output-on-failure
+	./build/testing/test_sub        -> PASS/FAIL por paso + resumen
+	./build/testing/test_sub -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=01.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,3E                            -> B=3E  PC=0102
+	[x]  2. LD A,B                             -> A=3E  PC=0103
+	[x]  3. LD C,3E                            -> C=3E  PC=0105
+	[x]  4. SUB C     3E-3E                    -> A=00  F=C0 (ZN--)  PC=0106
+	[x]  5. LD B,10                            -> B=10  PC=0108
+	[x]  6. LD A,B                             -> A=10  PC=0109
+	[x]  7. LD D,01                            -> D=01  PC=010B
+	[x]  8. SUB D     10-01                    -> A=0F  F=60 (-NH-)  PC=010C
+	[x]  9. LD E,20                            -> E=20  PC=010E
+	[x] 10. SUB E     0F-20                    -> A=EF  F=50 (-N-C)  PC=010F
+	[x] 11. SUB A                              -> A=00  F=C0 (ZN--)  PC=0110
+	[x] 12. LD H,01                            -> H=01  PC=0112
+	[x] 13. LD L,80                            -> HL=0180  PC=0114
+	[x] 14. SUB (HL)  00-01                    -> A=FF  F=70 (-NHC)  PC=0115
+	[x] 15. SUB 0F    FF-0F                    -> A=F0  F=40 (-N--)  PC=0117
+	[x] 16. SUB F1    F0-F1                    -> A=FF  F=70 (-NHC)  PC=0119
+	[x] 17. SBC A,B   FF-10-1                  -> A=EE  F=40 (-N--)  PC=011A
+	[x] 18. SUB F0    EE-F0                    -> A=FE  F=50 (-N-C)  PC=011C
+	[x] 19. SBC A,A   FE-FE-1                  -> A=FF  F=70 (-NHC)  PC=011D
+	[x] 20. SBC A,00  FF-00-1                  -> A=FE  F=40 (-N--)  PC=011F
+	[x] 21. SBC A,(HL) FE-01-0                 -> A=FD  F=40 (-N--)  PC=0120
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* B3 [CERRADO] SUB/SBC en sus opcodes correctos.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

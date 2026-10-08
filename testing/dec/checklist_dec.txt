@@ -1,0 +1,45 @@
+============================== CHECKLIST SUITE dec ==============================
+Suite:      DEC r8, DEC (HL), DEC rr / DEC SP
+Opcodes:    05 0D 15 1D 25 2D 3D, 35, 0B 1B 2B 3B
+Flags:      DEC r8 / (HL): Z 1 H -  (C se conserva; H=1 si hay borrow del bit 4).  DEC rr: ninguno
+Test:       testing/dec/test_dec.cpp (22 pasos)
+Estado:     08/10/2026 -> 22/22 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^dec$' --output-on-failure
+	./build/testing/test_dec        -> PASS/FAIL por paso + resumen
+	./build/testing/test_dec -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=01. DEC (HL) apunta a ROM: lee 01, la escritura se descarta (la persistencia se prueba en mem).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,10                            -> B=10  PC=0102
+	[x]  2. DEC B  10->0F borrow bit 4         -> B=0F  F=60 (-NH-)  PC=0103
+	[x]  3. LD C,01                            -> C=01  PC=0105
+	[x]  4. DEC C  01->00                      -> C=00  F=C0 (ZN--)  PC=0106
+	[x]  5. DEC D  00->FF                      -> D=FF  F=60 (-NH-)  PC=0107
+	[x]  6. LD E,05                            -> E=05  PC=0109
+	[x]  7. DEC E  05->04                      -> E=04  F=40 (-N--)  PC=010A
+	[x]  8. DEC A  00->FF                      -> A=FF  F=60 (-NH-)  PC=010B
+	[x]  9. DEC H  00->FF                      -> H=FF  F=60 (-NH-)  PC=010C
+	[x] 10. DEC L  00->FF                      -> L=FF  F=60 (-NH-)  PC=010D
+	[x] 11. DEC BC 0F00->0EFF sin flags        -> BC=0EFF  F=60 (-NH-)  PC=010E
+	[x] 12. LD B,00                            -> BC=00FF  PC=0110
+	[x] 13. LD C,00                            -> BC=0000  PC=0112
+	[x] 14. DEC BC 0000->FFFF                  -> BC=FFFF  F=60 (-NH-)  PC=0113
+	[x] 15. DEC DE FF04->FF03                  -> DE=FF03  PC=0114
+	[x] 16. DEC HL FFFF->FFFE                  -> HL=FFFE  PC=0115
+	[x] 17. DEC SP 0000->FFFF                  -> SP=FFFF  F=60 (-NH-)  PC=0116
+	[x] 18. LD H,01                            -> H=01  PC=0118
+	[x] 19. LD L,80                            -> HL=0180  PC=011A
+	[x] 20. DEC (HL) 01->00, ROM protegida     -> F=C0 (ZN--)  (0180)=01  PC=011B
+	[x] 21. ADD A,01  FF+01 -> C=1             -> A=00  F=B0 (Z-HC)  PC=011D
+	[x] 22. DEC A  00->FF conserva C           -> A=FF  F=70 (-NHC)  PC=011E
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* B5 [CERRADO] flag H de DEC r8 (pasos 2 y 4).
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

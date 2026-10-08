@@ -94,6 +94,10 @@ void OpcodeLoaders::load_LD16BITS_block(CPU &cpu) {
   cpu.opcode_table[0x31] = &CPU::op_LD16b_n_imm16<nullptr, nullptr, true>;   // LD   SP, d16
   // ================================== Operacion LD SP, HL ==================================
   cpu.opcode_table[0xF9] = &CPU::op_ld_sp_hl;
+  // ================================== Operacion LD HL, Sp+n ==================================
+  cpu.opcode_table[0xF8] = &CPU::op_ldhl_sp_n;
+  // ========================= Instruccion LD (nn), SP ==============================
+  cpu.opcode_table[0x08] = &CPU::op_ldnn_sp;
   // ===========================================================================
   // 2. CARGA DE PUSH nn
   // ===========================================================================
@@ -267,5 +271,7 @@ void OpcodeLoaders::load_ADD16BITS_block(CPU &cpu) {
   cpu.opcode_table[0x19] = &CPU::op_ADD16BIT_HL_n<&CPU::D, &CPU::E, false>;  // ADD HL, DE 
   cpu.opcode_table[0x29] = &CPU::op_ADD16BIT_HL_n<&CPU::H, &CPU::L, false>;  // ADD HL, HL 
   cpu.opcode_table[0x39] = &CPU::op_ADD16BIT_HL_n<nullptr, nullptr, true>;   // ADD HL, SP 
+
+  cpu.opcode_table[0xE8] = &CPU::op_ADD16bit_sp_n;
 }
 

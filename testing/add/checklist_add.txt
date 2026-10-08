@@ -1,0 +1,46 @@
+============================== CHECKLIST SUITE add ==============================
+Suite:      ADD A,n y ADC A,n
+Opcodes:    80-87 C6, 88-8F CE
+Flags:      Z 0 H C  (ADC suma tambien el carry previo, que cuenta para H y C)
+Test:       testing/add/test_add.cpp (23 pasos)
+Estado:     08/10/2026 -> 23/23 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^add$' --output-on-failure
+	./build/testing/test_add        -> PASS/FAIL por paso + resumen
+	./build/testing/test_add -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=3A.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,0F                            -> B=0F  PC=0102
+	[x]  2. LD A,B                             -> A=0F  PC=0103
+	[x]  3. LD C,01                            -> C=01  PC=0105
+	[x]  4. ADD A,C   0F+01                    -> A=10  F=20 (--H-)  PC=0106
+	[x]  5. LD D,20                            -> D=20  PC=0108
+	[x]  6. ADD A,D   10+20                    -> A=30  F=00 (----)  PC=0109
+	[x]  7. LD B,F0                            -> B=F0  PC=010B
+	[x]  8. ADD A,B   30+F0                    -> A=20  F=10 (---C)  PC=010C
+	[x]  9. LD E,E0                            -> E=E0  PC=010E
+	[x] 10. ADD A,E   20+E0                    -> A=00  F=90 (Z--C)  PC=010F
+	[x] 11. LD H,01                            -> H=01  PC=0111
+	[x] 12. LD L,80                            -> HL=0180  PC=0113
+	[x] 13. ADD A,(HL) 00+3A                   -> A=3A  F=00 (----)  PC=0114
+	[x] 14. ADD A,08  3A+08                    -> A=42  F=20 (--H-)  PC=0116
+	[x] 15. ADD A,A   42+42                    -> A=84  F=00 (----)  PC=0117
+	[x] 16. ADD A,H   84+01                    -> A=85  F=00 (----)  PC=0118
+	[x] 17. ADD A,L   85+80                    -> A=05  F=10 (---C)  PC=0119
+	[x] 18. ADC A,A   05+05+1                  -> A=0B  F=00 (----)  PC=011A
+	[x] 19. LD B,F4                            -> B=F4  PC=011C
+	[x] 20. ADC A,B   0B+F4+0                  -> A=FF  F=00 (----)  PC=011D
+	[x] 21. ADC A,C   FF+01+0                  -> A=00  F=B0 (Z-HC)  PC=011E
+	[x] 22. ADC A,0F  00+0F+1                  -> A=10  F=20 (--H-)  PC=0120
+	[x] 23. ADC A,(HL) 10+3A+0                 -> A=4A  F=00 (----)  PC=0121
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* Sin cubrir: ADC A,D / E / H / L (8A-8D).
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

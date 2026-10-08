@@ -43,9 +43,9 @@ void CPU::cpuCycle() {
 }
 
 void CPU::initCpu() {
-  A = 0, B = 0, C = 0, D = 0, E = 0, H = 0, L = 0, F = 0;
+  A = 0x01, B = 0x00, C = 0x13, D = 0x00, E = 0xD8, H = 0x01, L = 0x4D, F = 0xB0;
   PC = 0x0100;
-  SP = 0;
+  SP = 0xFFFE;
   current_opcode = 0;
   MCycles = 0;
 }
@@ -61,6 +61,7 @@ void CPU::loadOpcodes() {
   OpcodeLoaders::load_SUB_block(*this);
   OpcodeLoaders::load_LOGICAL_block(*this);
   OpcodeLoaders::load_LD16BITS_block(*this);
+  OpcodeLoaders::load_ADD16BITS_block(*this);
 }
 
 int CPU::b_illegal_opcode() {

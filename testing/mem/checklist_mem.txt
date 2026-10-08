@@ -1,0 +1,41 @@
+============================== CHECKLIST SUITE mem ==============================
+Suite:      Persistencia en WRAM de las instrucciones que escriben en memoria
+Opcodes:    36, 34, 35, 70, 4E, 7E, 22, 2B, 86, 01, 02, 0A
+Flags:      INC/DEC (HL) y ADD A,(HL) segun su familia; el resto ninguno
+Test:       testing/mem/test_mem.cpp (18 pasos)
+Estado:     08/10/2026 -> 18/18 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^mem$' --output-on-failure
+	./build/testing/test_mem        -> PASS/FAIL por paso + resumen
+	./build/testing/test_mem -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. Todo ocurre en WRAM C000/C001/C100 (B6 y B7 corregidos).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD HL,C000                         -> HL=C000  PC=0103
+	[x]  2. LD (HL),0F                         -> (C000)=0F  PC=0105
+	[x]  3. INC (HL)  0F->10                   -> (C000)=10  F=20 (--H-)  PC=0106
+	[x]  4. LD A,(HL)                          -> A=10  PC=0107
+	[x]  5. DEC (HL)  10->0F                   -> (C000)=0F  F=60 (-NH-)  PC=0108
+	[x]  6. DEC (HL)  0F->0E                   -> (C000)=0E  F=40 (-N--)  PC=0109
+	[x]  7. LD B,AB                            -> B=AB  PC=010B
+	[x]  8. LD (HL),B                          -> (C000)=AB  PC=010C
+	[x]  9. LD C,(HL)                          -> C=AB  PC=010D
+	[x] 10. LD (HL+),A                         -> (C000)=10  HL=C001  PC=010E
+	[x] 11. LD (HL),01                         -> (C001)=01  PC=0110
+	[x] 12. DEC (HL)  01->00                   -> (C001)=00  F=C0 (ZN--)  PC=0111
+	[x] 13. DEC HL                             -> HL=C000  PC=0112
+	[x] 14. ADD A,(HL) 10+10                   -> A=20  F=00 (----)  PC=0113
+	[x] 15. LD BC,C100                         -> BC=C100  PC=0116
+	[x] 16. LD (BC),A                          -> (C100)=20  PC=0117
+	[x] 17. LD A,00                            -> A=00  PC=0119
+	[x] 18. LD A,(BC)                          -> A=20  PC=011A
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* Complementa ld, ld16, inc y dec, cuyas escrituras van a ROM y se descartan.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

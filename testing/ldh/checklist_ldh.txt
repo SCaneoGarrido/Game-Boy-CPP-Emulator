@@ -1,0 +1,40 @@
+============================== CHECKLIST SUITE ldh ==============================
+Suite:      LDH (a8),A / A,(a8), LD (C),A / A,(C), LD (a16),A / A,(a16)
+Opcodes:    E0 F0, E2 F2, EA FA
+Flags:      Ninguno
+Test:       testing/ldh/test_ldh.cpp (17 pasos)
+Estado:     08/10/2026 -> 17/17 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^ldh$' --output-on-failure
+	./build/testing/test_ldh        -> PASS/FAIL por paso + resumen
+	./build/testing/test_ldh -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=77. Usa HRAM (FF80/FF81), WRAM (C100) y el espejo echo E100 -> C100 (valida tambien el BUS).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD A,42                            -> A=42  PC=0102
+	[x]  2. LDH (80),A                         -> (FF80)=42  F=00 (----)  PC=0104
+	[x]  3. LD A,00                            -> A=00  PC=0106
+	[x]  4. LDH A,(80)                         -> A=42  F=00 (----)  PC=0108
+	[x]  5. LD C,81                            -> C=81  PC=010A
+	[x]  6. LD A,99                            -> A=99  PC=010C
+	[x]  7. LD (C),A  FF81                     -> (FF81)=99  F=00 (----)  PC=010D
+	[x]  8. LD A,00                            -> A=00  PC=010F
+	[x]  9. LD A,(C)  FF81                     -> A=99  F=00 (----)  PC=0110
+	[x] 10. LD (C100),A                        -> (C100)=99  F=00 (----)  PC=0113
+	[x] 11. LD A,00                            -> A=00  PC=0115
+	[x] 12. LD A,(C100)                        -> A=99  F=00 (----)  PC=0118
+	[x] 13. LD A,(0180) ROM                    -> A=77  F=00 (----)  PC=011B
+	[x] 14. LD A,55                            -> A=55  PC=011D
+	[x] 15. LD (E100),A echo                   -> (E100)=55  (C100)=55  PC=0120
+	[x] 16. LD A,00                            -> A=00  PC=0122
+	[x] 17. LD A,(C100) via echo               -> A=55  F=00 (----)  PC=0125
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* Ninguno abierto.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

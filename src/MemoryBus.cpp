@@ -13,7 +13,7 @@ BUS::~BUS() {};
 void BUS::initMemoryBus() {
   IE = 0;
   reg_ff0 = 0x00;
-  bios_mapped = true;
+  bios_mapped = false;
   clearArrays();
 }
 

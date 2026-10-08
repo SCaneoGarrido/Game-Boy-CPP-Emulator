@@ -1,0 +1,39 @@
+============================== CHECKLIST SUITE and ==============================
+Suite:      AND n
+Opcodes:    A0-A7 E6
+Flags:      Z 0 1 0
+Test:       testing/and/test_and.cpp (16 pasos)
+Estado:     08/10/2026 -> 16/16 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^and$' --output-on-failure
+	./build/testing/test_and        -> PASS/FAIL por paso + resumen
+	./build/testing/test_and -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=3C.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,F0                            -> B=F0  PC=0102
+	[x]  2. LD A,B                             -> A=F0  PC=0103
+	[x]  3. LD C,0F                            -> C=0F  PC=0105
+	[x]  4. AND C     F0&0F                    -> A=00  F=A0 (Z-H-)  PC=0106
+	[x]  5. LD B,FF                            -> B=FF  PC=0108
+	[x]  6. LD A,B                             -> A=FF  PC=0109
+	[x]  7. AND C     FF&0F limpia Z           -> A=0F  F=20 (--H-)  PC=010A
+	[x]  8. LD H,01                            -> H=01  PC=010C
+	[x]  9. LD L,80                            -> HL=0180  PC=010E
+	[x] 10. AND (HL)  0F&3C                    -> A=0C  F=20 (--H-)  PC=010F
+	[x] 11. AND 04    0C&04                    -> A=04  F=20 (--H-)  PC=0111
+	[x] 12. AND A                              -> A=04  F=20 (--H-)  PC=0112
+	[x] 13. AND B     04&FF                    -> A=04  F=20 (--H-)  PC=0113
+	[x] 14. AND D     04&00                    -> A=00  F=A0 (Z-H-)  PC=0114
+	[x] 15. SUB 01    00-01 -> C=1             -> A=FF  F=70 (-NHC)  PC=0116
+	[x] 16. AND 0F    limpia C                 -> A=0F  F=20 (--H-)  PC=0118
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* B4 [CERRADO] AND limpia Z (paso 7).
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

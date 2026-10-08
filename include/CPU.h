@@ -4,6 +4,7 @@
 #include "OpcodeLoaders.h"
 #include <cstdint>
 class CPU;
+class CPUTestProbe; // testing/common/TestHarness.cpp - acceso para los tests (lectura + estado inicial)
 
 class CPU {
 private: 
@@ -82,6 +83,7 @@ private:
   int op_ld_sp_hl();
   int op_ldhl_sp_n();
   int op_ldnn_sp(); // LD (nn) SP
+  int op_ADD16bit_sp_n();
   // ================================== FLAGS LOGICS =======================================
   void setFlag(std::uint8_t mask);
   void clearFlag(std::uint8_t mask);
@@ -101,6 +103,7 @@ private:
   friend void OpcodeLoaders::load_LOGICAL_block(CPU &cpu);
   friend void OpcodeLoaders::load_LD16BITS_block(CPU &cpu);
   friend void OpcodeLoaders::load_ADD16BITS_block(CPU &cpu);
+  friend class CPUTestProbe;
 public:
   void loadOpcodes();
   CPU(BUS& _bus); // aqui necesitmaos pasar por referencia el BUS de memoria

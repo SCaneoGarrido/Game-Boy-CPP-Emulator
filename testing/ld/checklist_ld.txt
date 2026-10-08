@@ -1,0 +1,42 @@
+============================== CHECKLIST SUITE ld ==============================
+Suite:      NOP, LD r8,d8, LD r8,r8, LD r8,(HL), LD (HL),r8
+Opcodes:    00, 06 0E 16 1E 26 2E 3E, 40-7F (sin 76)
+Flags:      Ninguno (F=00 en toda la suite)
+Test:       testing/ld/test_ld.cpp (19 pasos)
+Estado:     08/10/2026 -> 19/19 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^ld$' --output-on-failure
+	./build/testing/test_ld        -> PASS/FAIL por paso + resumen
+	./build/testing/test_ld -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	data: 0180=A5. Las escrituras a 0180 caen en ROM: se comprueba que la ROM no cambia.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. NOP                                -> F=00 (----)  PC=0101
+	[x]  2. LD B,11                            -> B=11  F=00 (----)  PC=0103
+	[x]  3. LD C,22                            -> C=22  F=00 (----)  PC=0105
+	[x]  4. LD D,33                            -> D=33  F=00 (----)  PC=0107
+	[x]  5. LD E,44                            -> E=44  F=00 (----)  PC=0109
+	[x]  6. LD H,01                            -> H=01  F=00 (----)  PC=010B
+	[x]  7. LD L,80                            -> HL=0180  F=00 (----)  PC=010D
+	[x]  8. LD A,55                            -> A=55  HL=0180  F=00 (----)  PC=010F
+	[x]  9. LD A,B                             -> A=11  F=00 (----)  PC=0110
+	[x] 10. LD B,C                             -> B=22  F=00 (----)  PC=0111
+	[x] 11. LD A,A                             -> A=11  F=00 (----)  PC=0112
+	[x] 12. LD C,D                             -> C=33  F=00 (----)  PC=0113
+	[x] 13. LD D,E                             -> D=44  F=00 (----)  PC=0114
+	[x] 14. LD E,A                             -> E=11  F=00 (----)  PC=0115
+	[x] 15. LD A,(HL)  (0180)=A5               -> A=A5  F=00 (----)  PC=0116
+	[x] 16. LD B,(HL)                          -> B=A5  F=00 (----)  PC=0117
+	[x] 17. LD (HL),B  ROM protegida           -> (0180)=A5  F=00 (----)  PC=0118
+	[x] 18. LD (HL),A  ROM protegida           -> (0180)=A5  F=00 (----)  PC=0119
+	[x] 19. LD L,(HL)                          -> HL=01A5  F=00 (----)  PC=011A
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* B1 [CERRADO] 0x3E ya carga A (paso 8).
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

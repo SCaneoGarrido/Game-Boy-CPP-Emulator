@@ -1,0 +1,26 @@
+============================== CHECKLIST SUITE boot ==============================
+Suite:      Estado de la CPU tras saltar la boot ROM (CPU::initCpu)
+Opcodes:    00, F5, C1 (solo como apoyo)
+Flags:      Estado post-boot: F=B0 (Z-HC)
+Test:       testing/boot/test_boot.cpp (3 pasos)
+Estado:     08/10/2026 -> 3/3 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^boot$' --output-on-failure
+	./build/testing/test_boot        -> PASS/FAIL por paso + resumen
+	./build/testing/test_boot -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: post-boot (ver nota siguiente), memoria a 0. Codigo en 0100.
+	Unica suite con inicio post-boot: A=01 F=B0 BC=0013 DE=00D8 HL=014D SP=FFFE PC=0100.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. NOP  estado post-boot              -> A=01  F=B0 (Z-HC)  BC=0013  DE=00D8  HL=014D  SP=FFFE  PC=0101
+	[x]  2. PUSH AF  pila en HRAM              -> SP=FFFC  (FFFD)=01  (FFFC)=B0  PC=0102
+	[x]  3. POP BC                             -> BC=01B0  SP=FFFE  PC=0103
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* B9 [CERRADO 08/10/2026] initCpu carga el estado post-boot del DMG.
+	* B13 [ABIERTO] BUS deja bios_mapped=true aunque se salte el boot: 0000-00FF leen la boot ROM en vez del cartucho.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

@@ -1,0 +1,30 @@
+============================== CHECKLIST SUITE ld16imm ==============================
+Suite:      LD rr,d16 y LD SP,HL
+Opcodes:    01 11 21 31, F9
+Flags:      Ninguno (F=00 en toda la suite)
+Test:       testing/ld16imm/test_ld16imm.cpp (7 pasos)
+Estado:     08/10/2026 -> 7/7 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^ld16imm$' --output-on-failure
+	./build/testing/test_ld16imm        -> PASS/FAIL por paso + resumen
+	./build/testing/test_ld16imm -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. d16 en little endian (byte bajo primero).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD BC,1234                         -> BC=1234  F=00 (----)  PC=0103
+	[x]  2. LD DE,5678                         -> DE=5678  F=00 (----)  PC=0106
+	[x]  3. LD HL,9ABC                         -> HL=9ABC  F=00 (----)  PC=0109
+	[x]  4. LD SP,FFFE                         -> SP=FFFE  F=00 (----)  PC=010C
+	[x]  5. LD SP,HL   9ABC                    -> SP=9ABC  HL=9ABC  F=00 (----)  PC=010D
+	[x]  6. LD HL,0000                         -> HL=0000  F=00 (----)  PC=0110
+	[x]  7. LD SP,HL   0000                    -> SP=0000  F=00 (----)  PC=0111
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* Ninguno abierto.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

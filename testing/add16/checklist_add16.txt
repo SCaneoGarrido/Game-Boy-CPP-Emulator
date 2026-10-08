@@ -1,0 +1,47 @@
+============================== CHECKLIST SUITE add16 ==============================
+Suite:      ADD HL,rr y ADD SP,e8
+Opcodes:    09 19 29 39, E8
+Flags:      ADD HL,rr: - 0 H C (Z intacto; H acarreo del bit 11, C del bit 15).  ADD SP,e8: 0 0 H C (H/C del byte bajo sin signo)
+Test:       testing/add16/test_add16.cpp (24 pasos)
+Estado:     08/10/2026 -> 24/24 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^add16$' --output-on-failure
+	./build/testing/test_add16        -> PASS/FAIL por paso + resumen
+	./build/testing/test_add16 -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. Apoyo: LD rr,d16 y XOR A (para poner Z=1).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD HL,8000                         -> HL=8000  PC=0103
+	[x]  2. ADD HL,HL  8000+8000 (Z no se activa) -> HL=0000  F=10 (---C)  PC=0104
+	[x]  3. LD HL,0FFF                         -> HL=0FFF  PC=0107
+	[x]  4. LD BC,0001                         -> BC=0001  PC=010A
+	[x]  5. XOR A                              -> A=00  F=80 (Z---)  PC=010B
+	[x]  6. ADD HL,BC  0FFF+0001 (Z intacto)   -> HL=1000  F=A0 (Z-H-)  PC=010C
+	[x]  7. LD DE,F000                         -> DE=F000  PC=010F
+	[x]  8. ADD HL,DE  1000+F000               -> HL=0000  F=90 (Z--C)  PC=0110
+	[x]  9. LD HL,1234                         -> HL=1234  PC=0113
+	[x] 10. LD SP,4321                         -> SP=4321  PC=0116
+	[x] 11. ADD HL,SP  1234+4321               -> HL=5555  F=80 (Z---)  PC=0117
+	[x] 12. ADD HL,HL  5555+5555               -> HL=AAAA  F=80 (Z---)  PC=0118
+	[x] 13. LD HL,FFFF                         -> HL=FFFF  PC=011B
+	[x] 14. ADD HL,BC  FFFF+0001 (H y C)       -> HL=0000  F=B0 (Z-HC)  PC=011C
+	[x] 15. LD SP,FFF8                         -> SP=FFF8  PC=011F
+	[x] 16. ADD SP,+8  (Z se limpia)           -> SP=0000  F=30 (--HC)  PC=0121
+	[x] 17. ADD SP,-1                          -> SP=FFFF  F=00 (----)  PC=0123
+	[x] 18. ADD SP,+1                          -> SP=0000  F=30 (--HC)  PC=0125
+	[x] 19. LD SP,1000                         -> SP=1000  PC=0128
+	[x] 20. ADD SP,-128                        -> SP=0F80  F=00 (----)  PC=012A
+	[x] 21. ADD SP,+127                        -> SP=0FFF  F=00 (----)  PC=012C
+	[x] 22. LD SP,000F                         -> SP=000F  PC=012F
+	[x] 23. XOR A                              -> F=80 (Z---)  PC=0130
+	[x] 24. ADD SP,+1  (Z 1->0, H sin C)       -> SP=0010  F=20 (--H-)  PC=0132
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* A1 [CERRADO 08/10/2026] load_ADD16BITS_block ya se llama en CPU::loadOpcodes().
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt
