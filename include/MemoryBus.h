@@ -12,6 +12,7 @@ private:
   std::uint8_t io_registers[128];
   std::vector<std::uint8_t> cartrigbe_rom_bank; // Aqui cargo el juego
   std::uint8_t IE;
+  std::uint8_t IF;
   // Componentes de la boot room
   std::uint8_t boot_rom[256];
   bool bios_mapped;
@@ -25,8 +26,7 @@ public:
   void load_boot_rom(std::vector<std::uint8_t> boot_bytes);
 
   std::uint8_t read(std::uint16_t address);
-  void write(std::uint16_t address, std::uint8_t value); // no implementado
-
+  void write(std::uint16_t address, std::uint8_t value); 
   void initMemoryBus();
 };
 #endif // !BUS_H

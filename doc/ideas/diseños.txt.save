@@ -152,3 +152,20 @@ declaracion:
   TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<true, &CPU::D, &CPU::E, 0>();  // Opcode 0x12: LD (DE), A
   TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<true, &CPU::H, &CPU::L, 1>();  // Opcode 0x22: LD (HL+), A
   TEMPLATE ENTERO CPU::op_ld_reg16_indirecto<true, &CPU::H, &CPU::L, 2>();  // Opcode 0x32: LD (HL-), A
+
+
+
+
+======================================= LOGICA INTRUCCION DAA ===================================
+std::uint8_t original_A = A;
+
+si !bandera_n {
+  si (bandera_c || original_A > 0x99) {A += 0x60; bandera_c = true;}
+  si (bandera_h || (original_A & 0x0F) > 0x09) { A+= 0x6; }
+} entonces {
+  si (bandera_c) { A -= 0x60; }
+  si (bandera_h) { A -= 0x6;  }
+}
+
+bandera_z = (A == 0);
+bandera_h = 0;

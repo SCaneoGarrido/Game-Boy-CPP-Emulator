@@ -113,6 +113,7 @@ void OpcodeLoaders::load_LD16BITS_block(CPU &cpu) {
   cpu.opcode_table[0xD1] = &CPU::op_POP_nn<&CPU::D, &CPU::E>;  // POP DE, SP
   cpu.opcode_table[0xE1] = &CPU::op_POP_nn<&CPU::H, &CPU::L>;  // POP HL, SP
 }
+
 void OpcodeLoaders::load_ADD_block(CPU &cpu) {
   // ===========================================================================
   // 1. CARGA DE ADD A, n
@@ -274,4 +275,33 @@ void OpcodeLoaders::load_ADD16BITS_block(CPU &cpu) {
 
   cpu.opcode_table[0xE8] = &CPU::op_ADD16bit_sp_n;
 }
+
+
+// CB PREFIX
+void OpcodeLoaders::load_SWAP_n_cb_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE SWAP n
+  // ===========================================================================
+  cpu.opcode_table_cb[0x30] = &CPU::op_cb_swap_n<&CPU::B, false>; // INC B
+  cpu.opcode_table_cb[0x31] = &CPU::op_cb_swap_n<&CPU::C, false>; // INC C
+  cpu.opcode_table_cb[0x32] = &CPU::op_cb_swap_n<&CPU::D, false>; // INC D
+  cpu.opcode_table_cb[0x33] = &CPU::op_cb_swap_n<&CPU::E, false>; // INC E
+  cpu.opcode_table_cb[0x34] = &CPU::op_cb_swap_n<&CPU::H, false>; // INC H
+  cpu.opcode_table_cb[0x35] = &CPU::op_cb_swap_n<&CPU::L, false>; // INC L
+  cpu.opcode_table_cb[0x37] = &CPU::op_cb_swap_n<&CPU::A, false>; // INC A
+  cpu.opcode_table_cb[0x36] = &CPU::op_cb_swap_n<nullptr, true>;  // INC HL
+  
+}
+void OpcodeLoaders::load_MISSCELLANEOUS_block(CPU &cpu) {
+  cpu.opcode_table[0x27] = &CPU::op_DAA;
+  cpu.opcode_table[0x2F] = &CPU::op_CPL;
+  cpu.opcode_table[0x3F] = &CPU::op_CCF;
+  cpu.opcode_table[0x37] = &CPU::op_SCF;
+  cpu.opcode_table[0x00] = &CPU::op_nop;
+  cpu.opcode_table[0x76] = &CPU::op_halt;
+  cpu.opcode_table[0x10] = &CPU::op_stop;
+  cpu.opcode_table[0xF3] = &CPU::op_di;
+  cpu.opcode_table[0xFB] = &CPU::op_ei;
+}
+
 

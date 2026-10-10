@@ -75,10 +75,10 @@ int CPU::op_ldnn_sp() {
 // ========================= Instruccion PUSH nn ===============================
 template <std::uint8_t CPU::*hregistro, std::uint8_t CPU::*lregistro>
 int CPU::op_PUSH_nn() {
-  SP--;
-  bus.write(SP, this->*hregistro);
-  SP--;
-  bus.write(SP, this->*lregistro);
+  std::uint8_t high = this->*hregistro;
+  std::uint8_t low  = this->*lregistro;
+  std::uint16_t value = (high << 8) | low;
+  push16(value);
   return 4;
 }
 template int CPU::op_PUSH_nn<&CPU::A, &CPU::F>();
@@ -88,10 +88,9 @@ template int CPU::op_PUSH_nn<&CPU::H, &CPU::L>();
 // ========================= Instruccion POP nn ===============================
 template <std::uint8_t CPU::*hregistro, std::uint8_t CPU::*lregistro>
 int CPU::op_POP_nn() {
-  this->*lregistro = bus.read(SP);
-  SP++;
-  this->*hregistro = bus.read(SP);
-  SP++;
+  std::uint16_t value = pop16();
+  this->*lregistro = value & 0xFF;
+  this->*hregistro = (value >> 8) & 0xFF;
   if constexpr (lregistro == &CPU::F) {
     F = F & 0xF0;
   }

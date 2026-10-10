@@ -11,7 +11,8 @@ BUS::BUS() {
 BUS::~BUS() {};
 
 void BUS::initMemoryBus() {
-  IE = 0;
+  IE = 0x00;
+  IF = 0xE1;
   reg_ff0 = 0x00;
   bios_mapped = false;
   clearArrays();
@@ -39,7 +40,15 @@ std::uint8_t BUS::read(std::uint16_t address) {
   if (address <= 0x00FF && bios_mapped) {
     return boot_rom[address];
   }
-
+  
+  if (address == 0xFF0F) {
+    return IF | 0xE0;
+  }
+  
+  if (address == 0xFFFF) {
+    return IE | 0xE0;
+  }
+  
   if (address <= 0x7FFF) {
     if (address < cartrigbe_rom_bank.size()) {
       return cartrigbe_rom_bank[address];
@@ -70,10 +79,6 @@ std::uint8_t BUS::read(std::uint16_t address) {
 
   else if (address >= 0xFF80 && address <= 0xFFFE) {
     return hram[address - 0xFF80];
-  }
-
-  else if (address == 0xFFFF) {
-    return IE;
   }
   return 0xFF;
 }

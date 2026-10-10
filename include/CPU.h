@@ -14,10 +14,17 @@ private:
   std::uint16_t PC, SP;
   int MCycles;
   void initCpu();
+  // ============================== INTERRUPT    =============================================
+  bool IME                = false;
+  bool is_halted          = false;
+  bool halt_bug_active    = false;
+  bool pending_ime_enable = false;
+  bool is_stopped         = false;
   // ============================== Opcodes data ============================================= 
   std::uint8_t current_opcode;
   using InstructionFunc = int (CPU::*)();
   InstructionFunc opcode_table[256];
+  InstructionFunc opcode_table_cb[256];
   // ============================== Flags Mask ==============================  
   const std::uint8_t FLAG_Z = 0x80;
   const std::uint8_t FLAG_N = 0x40;
@@ -28,6 +35,8 @@ private:
   static const Reg8Ptr mapa_registros[8];
   std::uint16_t getPairedRegisters(std::uint8_t x_value, std::uint8_t y_value);
   void setPairedRegisters(std::uint8_t& x_reg, std::uint8_t& y_reg, std::uint16_t value);
+  void push16(std::uint16_t value);
+  std::uint16_t pop16();
   // ============================== CPU-INSTRUCTIONS =============================================
   template<std::uint8_t CPU::*registro_destino, bool hl_modified>
   int op_ld_n_imm8();
@@ -78,12 +87,24 @@ private:
   int op_ld_a16_a();
   int op_ld_a_a16();
   int b_illegal_opcode(); // EXCEPTION - PROTECCION DE opcode_table
-  int b_nop();
-  int b_stop();
   int op_ld_sp_hl();
   int op_ldhl_sp_n();
   int op_ldnn_sp(); // LD (nn) SP
   int op_ADD16bit_sp_n();
+  // ============================== CPU-CB PREFIX INSTRUCTIONS =============================================
+  int op_cb_prefix_handler(); // Handler especial para capturar el prefijo CB
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_cb_swap_n();
+  // ============================== CPU MISCELLANEOUS INSTRUCTIONS =============================================
+  int op_DAA();
+  int op_CPL();
+  int op_CCF();
+  int op_SCF();
+  int op_nop();
+  int op_stop();
+  int op_halt();
+  int op_ei();
+  int op_di();
   // ================================== FLAGS LOGICS =======================================
   void setFlag(std::uint8_t mask);
   void clearFlag(std::uint8_t mask);
@@ -103,6 +124,8 @@ private:
   friend void OpcodeLoaders::load_LOGICAL_block(CPU &cpu);
   friend void OpcodeLoaders::load_LD16BITS_block(CPU &cpu);
   friend void OpcodeLoaders::load_ADD16BITS_block(CPU &cpu);
+  friend void OpcodeLoaders::load_SWAP_n_cb_block(CPU &cpu);
+  friend void OpcodeLoaders::load_MISSCELLANEOUS_block(CPU &cpu);
   friend class CPUTestProbe;
 public:
   void loadOpcodes();

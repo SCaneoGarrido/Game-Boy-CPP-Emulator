@@ -2,7 +2,7 @@
 #define OPCODELOADERS_H
 class CPU;
 namespace OpcodeLoaders {
-  // Definicion de la Definicion
+  // Opcodes de tabla General
   void load_ld_block(CPU& cpu);
   void load_INC_block(CPU& cpu);
   void load_DEC_block(CPU& cpu);
@@ -11,6 +11,12 @@ namespace OpcodeLoaders {
   void load_LOGICAL_block(CPU& cpu);
   void load_LD16BITS_block(CPU& cpu);
   void load_ADD16BITS_block(CPU& cpu);
+
+  // Opcodes de prefijo CB
+  void load_SWAP_n_cb_block(CPU& cpu);
+  
+  // Opcodes Miscellaneous
+  void load_MISSCELLANEOUS_block(CPU& cpu);
 }
 
 

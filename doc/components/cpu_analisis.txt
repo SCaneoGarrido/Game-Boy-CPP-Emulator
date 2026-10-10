@@ -28,7 +28,7 @@ Descripción:
 		* A - (8 bits MAS SIGNFICATIVOS / higher 8 bits)
 		* F - (8 bits MENOS SIGNIFICATIVOS / lower 8 bits)
 	
-		dentro de ese registro F se debe aplicar el siguiente mapa o tabla.
+	dentro de ese registro F se debe aplicar el siguiente mapa o tabla.
 	
 	Bit	Name	Explanation
 	7	z	Zero flag 		- ¿operacion resultado 0?
