@@ -1,0 +1,41 @@
+============================== CHECKLIST SUITE control ==============================
+Suite:      DI, EI, NOP, HALT (con HALT bug) y STOP
+Opcodes:    F3 FB 00 76 10
+Flags:      Ninguno (INC A solo como apoyo: Z0H-)
+Test:       testing/control/test_control.cpp (15 pasos)
+Estado:     13/10/2026 -> 15/15 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+         IME/HALT/STOP = estado interno de la CPU (1/0)   M = M-cycles consumidos por el paso
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^control$' --output-on-failure
+	./build/testing/test_control        -> PASS/FAIL por paso + resumen
+	./build/testing/test_control -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. IF arranca en E1 (V-Blank pendiente); los pasos 10 y 14 inyectan IE (poke FFFF=01 / FFFF=00) antes de ejecutarse, simulando hardware externo.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. DI                                 -> IME=0  PC=0101  M=1
+	[x]  2. EI        IME aun 0 (retraso)      -> IME=0  PC=0102  M=1
+	[x]  3. NOP       IME=1 tras la instruccion siguiente -> IME=1  PC=0103  M=1
+	[x]  4. DI        IME=0 inmediato          -> IME=0  PC=0104  M=1
+	[x]  5. EI                                 -> IME=0  PC=0105
+	[x]  6. DI        anula el EI pendiente    -> IME=0  PC=0106
+	[x]  7. NOP       IME sigue a 0            -> IME=0  PC=0107
+	[x]  8. HALT      sin interrupcion -> CPU detenida -> HALT=1  PC=0108  M=1
+	[x]  9. (HALT)    espera, PC congelado     -> HALT=1  A=00  PC=0108  M=1
+	[x] 10. INC A     IE=01 despierta la CPU   -> HALT=0  A=01  F=00 (----)  PC=0109
+	[x] 11. HALT      HALT bug (IME=0, pendiente) -> HALT=0  PC=010A  M=1
+	[x] 12. INC A     1a lectura, PC no avanza -> A=02  F=00 (----)  PC=010A
+	[x] 13. INC A     2a lectura del mismo byte -> A=03  F=00 (----)  PC=010B
+	[x] 14. STOP      consume 10 00            -> STOP=1  PC=010D  M=1
+	[x] 15. (STOP)    espera, PC congelado     -> STOP=1  PC=010D  M=1
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* H7 [CERRADO 13/10/2026] EI activaba IME al terminar el propio EI. Parche en CPU::cpuCycle(): IME se activa al terminar la instruccion SIGUIENTE y un DI en medio lo anula (casos 2, 3, 5-7).
+	* Paso 10: salir de HALT con IME=0 no suma ciclos extra en el modelo actual; no se comprueba M.
+	* STOP deja la CPU parada sin salida (no hay joypad): por eso es el ultimo caso.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

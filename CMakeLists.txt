@@ -6,11 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Nucleo del emulador (CPU + BUS + opcodes). Lo comparten DMGE y los tests.
-# GLOB con CONFIGURE_DEPENDS: un archivo nuevo en src/cpuinstructions/ entra
-# solo en el build, sin tener que listarlo aqui.
+# GLOB con CONFIGURE_DEPENDS: un archivo nuevo en cualquiera de estas carpetas
+# entra solo en el build, sin tener que listarlo aqui.
 file(GLOB DMG_CORE_SOURCES CONFIGURE_DEPENDS
   src/*.cpp
   src/cpuinstructions/*.cpp
+  src/cpuinstructionsCB/*.cpp
+  src/cpumiscellaneous/*.cpp
 )
 add_library(dmg_core STATIC ${DMG_CORE_SOURCES}
   utils/OpcodesLoaders.cpp

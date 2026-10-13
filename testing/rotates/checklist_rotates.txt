@@ -1,0 +1,48 @@
+============================== CHECKLIST SUITE rotates ==============================
+Suite:      RLCA, RRCA, RLA y RRA
+Opcodes:    07 0F 17 1F
+Flags:      0 0 0 C  (Z SIEMPRE a 0, aunque A quede a 0)
+Test:       testing/rotates/test_rotates.cpp (23 pasos)
+Estado:     13/10/2026 -> 23/23 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+         IME/HALT/STOP = estado interno de la CPU (1/0)   M = M-cycles consumidos por el paso
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^rotates$' --output-on-failure
+	./build/testing/test_rotates        -> PASS/FAIL por paso + resumen
+	./build/testing/test_rotates -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD A,85                            -> A=85  PC=0102
+	[x]  2. RLCA      85 -> 0B C               -> A=0B  F=10 (---C)  PC=0103  M=1
+	[x]  3. RLCA      0B -> 16                 -> A=16  F=00 (----)  PC=0104  M=1
+	[x]  4. RRCA      16 -> 0B                 -> A=0B  F=00 (----)  PC=0105  M=1
+	[x]  5. RRCA      0B -> 85 C               -> A=85  F=10 (---C)  PC=0106  M=1
+	[x]  6. RLA       85,C=1 -> 0B C           -> A=0B  F=10 (---C)  PC=0107  M=1
+	[x]  7. RLA       0B,C=1 -> 17             -> A=17  F=00 (----)  PC=0108  M=1
+	[x]  8. RRA       17,C=0 -> 0B C           -> A=0B  F=10 (---C)  PC=0109  M=1
+	[x]  9. RRA       0B,C=1 -> 85 C           -> A=85  F=10 (---C)  PC=010A  M=1
+	[x] 10. XOR A                              -> A=00  F=80 (Z---)  PC=010B
+	[x] 11. RLCA      00 -> 00, Z=0            -> A=00  F=00 (----)  PC=010C
+	[x] 12. XOR A                              -> F=80 (Z---)  PC=010D
+	[x] 13. RLA       00 -> 00, Z=0            -> A=00  F=00 (----)  PC=010E
+	[x] 14. XOR A                              -> F=80 (Z---)  PC=010F
+	[x] 15. RRCA      00 -> 00, Z=0            -> A=00  F=00 (----)  PC=0110
+	[x] 16. XOR A                              -> F=80 (Z---)  PC=0111
+	[x] 17. RRA       00 -> 00, Z=0            -> A=00  F=00 (----)  PC=0112
+	[x] 18. LD A,01                            -> A=01  PC=0114
+	[x] 19. RRA       01,C=0 -> 00 C, Z=0      -> A=00  F=10 (---C)  PC=0115
+	[x] 20. LD A,80                            -> A=80  PC=0117
+	[x] 21. RLA       80,C=1 -> 01 C           -> A=01  F=10 (---C)  PC=0118
+	[x] 22. CPL       01 -> FE (N H a 1)       -> A=FE  F=70 (-NHC)  PC=0119
+	[x] 23. RLCA      FE -> FD C, limpia N H   -> A=FD  F=10 (---C)  PC=011A
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* H2 [CERRADO 13/10/2026] load_ROTATES_block no se llamaba desde loadOpcodes().
+	* H6 [CERRADO 13/10/2026] RLCA ponia Z si A==0: caso 11.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

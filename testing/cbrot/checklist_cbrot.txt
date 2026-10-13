@@ -1,0 +1,61 @@
+============================== CHECKLIST SUITE cbrot ==============================
+Suite:      Prefijo CB: RLC r y RL r
+Opcodes:    CB 00-07, CB 10-17
+Flags:      Z 0 0 C
+Test:       testing/cbrot/test_cbrot.cpp (35 pasos)
+Estado:     13/10/2026 -> 35/35 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+         IME/HALT/STOP = estado interno de la CPU (1/0)   M = M-cycles consumidos por el paso
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^cbrot$' --output-on-failure
+	./build/testing/test_cbrot        -> PASS/FAIL por paso + resumen
+	./build/testing/test_cbrot -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. (HL)=C000 (WRAM).
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,85                            -> B=85  PC=0102
+	[x]  2. RLC B     85 -> 0B C               -> B=0B  F=10 (---C)  PC=0104  M=2
+	[x]  3. LD C,00                            -> C=00  PC=0106
+	[x]  4. RLC C     00 -> 00 Z               -> C=00  F=80 (Z---)  PC=0108  M=2
+	[x]  5. LD D,80                            -> D=80  PC=010A
+	[x]  6. RLC D     80 -> 01 C               -> D=01  F=10 (---C)  PC=010C  M=2
+	[x]  7. LD E,01                            -> E=01  PC=010E
+	[x]  8. RLC E     01 -> 02                 -> E=02  F=00 (----)  PC=0110  M=2
+	[x]  9. LD H,40                            -> H=40  PC=0112
+	[x] 10. RLC H     40 -> 80                 -> H=80  F=00 (----)  PC=0114  M=2
+	[x] 11. LD L,FF                            -> L=FF  PC=0116
+	[x] 12. RLC L     FF -> FF C               -> L=FF  F=10 (---C)  PC=0118  M=2
+	[x] 13. LD A,7F                            -> A=7F  PC=011A
+	[x] 14. RLC A     7F -> FE                 -> A=FE  F=00 (----)  PC=011C  M=2
+	[x] 15. LD HL,C000                         -> HL=C000  PC=011F
+	[x] 16. LD (HL),81                         -> (C000)=81  PC=0121
+	[x] 17. RLC (HL)  81 -> 03 C               -> (C000)=03  F=10 (---C)  PC=0123  M=4
+	[x] 18. LD B,80                            -> B=80  PC=0125
+	[x] 19. RL B      80,C=1 -> 01 C           -> B=01  F=10 (---C)  PC=0127  M=2
+	[x] 20. LD C,00                            -> C=00  PC=0129
+	[x] 21. RL C      00,C=1 -> 01             -> C=01  F=00 (----)  PC=012B  M=2
+	[x] 22. LD D,80                            -> D=80  PC=012D
+	[x] 23. RL D      80,C=0 -> 00 Z C         -> D=00  F=90 (Z--C)  PC=012F  M=2
+	[x] 24. LD E,40                            -> E=40  PC=0131
+	[x] 25. RL E      40,C=1 -> 81             -> E=81  F=00 (----)  PC=0133  M=2
+	[x] 26. LD H,FF                            -> H=FF  PC=0135
+	[x] 27. RL H      FF,C=0 -> FE C           -> H=FE  F=10 (---C)  PC=0137  M=2
+	[x] 28. LD L,00                            -> L=00  PC=0139
+	[x] 29. RL L      00,C=1 -> 01             -> L=01  F=00 (----)  PC=013B  M=2
+	[x] 30. LD A,81                            -> A=81  PC=013D
+	[x] 31. RL A      81,C=0 -> 02 C           -> A=02  F=10 (---C)  PC=013F  M=2
+	[x] 32. LD HL,C000                         -> HL=C000  PC=0142
+	[x] 33. LD (HL),7F                         -> (C000)=7F  PC=0144
+	[x] 34. RL (HL)   7F,C=1 -> FF             -> (C000)=FF  F=00 (----)  PC=0146  M=4
+	[x] 35. RL (HL)   FF,C=0 -> FE C           -> (C000)=FE  F=10 (---C)  PC=0148  M=4
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* H2 [CERRADO 13/10/2026] load_ROTATES_CB_block no se llamaba desde loadOpcodes().
+	* H3 [CERRADO 13/10/2026] CB 06 y CB 16 se registraban sobre A en vez de (HL): casos 17, 34 y 35.
+	* Pendiente en el prefijo CB: RRC, RR, SLA, SRA, SRL, BIT, RES, SET.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

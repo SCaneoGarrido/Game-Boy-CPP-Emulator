@@ -24,8 +24,15 @@ public:
   static std::uint8_t L(const CPU &c) { return c.L; }
   static std::uint16_t PC(const CPU &c) { return c.PC; }
   static std::uint16_t SP(const CPU &c) { return c.SP; }
+  static bool IME(const CPU &c) { return c.IME; }
+  static bool halted(const CPU &c) { return c.is_halted; }
+  static bool stopped(const CPU &c) { return c.is_stopped; }
+  static int cycles(const CPU &c) { return c.MCycles; }
   static bool isRegistered(const CPU &c, std::uint8_t opcode) {
     return c.opcode_table[opcode] != &CPU::b_illegal_opcode;
+  }
+  static bool isRegisteredCB(const CPU &c, std::uint8_t opcode) {
+    return c.opcode_table_cb[opcode] != &CPU::b_illegal_opcode;
   }
 };
 
@@ -83,11 +90,23 @@ int runSuite(const std::string &name, const std::vector<std::uint8_t> &code,
 
     // Un opcode sin registrar haria exit(1) dentro de b_illegal_opcode:
     // se detecta antes y se corta la suite con un FAIL legible.
-    std::uint8_t opcode = bus.read(CPUTestProbe::PC(cpu));
-    if (!CPUTestProbe::isRegistered(cpu, opcode)) {
+    // Si la CPU esta en HALT/STOP no hay fetch y no se comprueba nada.
+    // Con el prefijo CB se mira tambien el segundo byte en opcode_table_cb.
+    std::uint16_t pc = CPUTestProbe::PC(cpu);
+    std::uint8_t opcode = bus.read(pc);
+    bool fetches = !CPUTestProbe::halted(cpu) && !CPUTestProbe::stopped(cpu);
+    if (fetches && !CPUTestProbe::isRegistered(cpu, opcode)) {
       std::cout << "[FAIL] " << label << " -> opcode 0x" << hex(opcode, 2)
                 << " no registrado en opcode_table; suite detenida\n";
       break;
+    }
+    if (fetches && opcode == 0xCB) {
+      std::uint8_t cb_opcode = bus.read(pc + 1);
+      if (!CPUTestProbe::isRegisteredCB(cpu, cb_opcode)) {
+        std::cout << "[FAIL] " << label << " -> opcode CB 0x" << hex(cb_opcode, 2)
+                  << " no registrado en opcode_table_cb; suite detenida\n";
+        break;
+      }
     }
 
     // La CPU y el BUS imprimen trazas en cada instruccion: solo con -v.
@@ -99,7 +118,11 @@ int runSuite(const std::string &name, const std::vector<std::uint8_t> &code,
     std::ostringstream discard;
     if (!verbose)
       std::cout.rdbuf(discard.rdbuf());
+    for (const auto &[addr, value] : step.poke)
+      bus.write(addr, value);
+    int cycles_before = CPUTestProbe::cycles(cpu);
     cpu.cpuCycle();
+    int cycles_used = CPUTestProbe::cycles(cpu) - cycles_before;
     if (verbose)
       cpu.showCPUINFO();
     std::cout.rdbuf(original);
@@ -120,6 +143,10 @@ int runSuite(const std::string &name, const std::vector<std::uint8_t> &code,
     for (const auto &[addr, value] : exp.memory)
       check(errors, "(" + hex(addr, 4) + ")", std::optional<std::uint8_t>(value),
             bus.read(addr), 2);
+    check(errors, "IME", exp.IME, CPUTestProbe::IME(cpu), 1);
+    check(errors, "HALT", exp.HALTED, CPUTestProbe::halted(cpu), 1);
+    check(errors, "STOP", exp.STOPPED, CPUTestProbe::stopped(cpu), 1);
+    check(errors, "M-cycles", exp.CYCLES, cycles_used, 1);
 
     if (errors.empty()) {
       passed++;

@@ -2,11 +2,12 @@
 Suite:      ADD A,n y ADC A,n
 Opcodes:    80-87 C6, 88-8F CE
 Flags:      Z 0 H C  (ADC suma tambien el carry previo, que cuenta para H y C)
-Test:       testing/add/test_add.cpp (23 pasos)
-Estado:     08/10/2026 -> 23/23 OK
+Test:       testing/add/test_add.cpp (27 pasos)
+Estado:     13/10/2026 -> 27/27 OK
 
 Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
          Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+         IME/HALT/STOP = estado interno de la CPU (1/0)   M = M-cycles consumidos por el paso
 
 1.- COMO EJECUTAR
 	ctest --test-dir build -R '^add$' --output-on-failure
@@ -40,7 +41,11 @@ Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no regi
 	[x] 21. ADC A,C   FF+01+0                  -> A=00  F=B0 (Z-HC)  PC=011E
 	[x] 22. ADC A,0F  00+0F+1                  -> A=10  F=20 (--H-)  PC=0120
 	[x] 23. ADC A,(HL) 10+3A+0                 -> A=4A  F=00 (----)  PC=0121
+	[x] 24. ADC A,D   4A+20+0                  -> A=6A  F=00 (----)  PC=0122
+	[x] 25. ADC A,E   6A+E0+0                  -> A=4A  F=10 (---C)  PC=0123
+	[x] 26. ADC A,H   4A+01+1                  -> A=4C  F=00 (----)  PC=0124
+	[x] 27. ADC A,L   4C+80+0                  -> A=CC  F=00 (----)  PC=0125
 
 3.- NOTAS Y HALLAZGOS RELACIONADOS
-	* Sin cubrir: ADC A,D / E / H / L (8A-8D).
+	* Cubiertos desde el 13/10/2026: ADC A,D / E / H / L (8A-8D), casos 24-27.
 	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

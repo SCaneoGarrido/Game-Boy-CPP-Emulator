@@ -8,6 +8,7 @@ set(DMG_TEST_SUITES
   boot
   ld ld16 inc dec add sub and add16
   logic ld16imm ldsp stack ldh mem
+  misc control interrupts rotates cbrot swap
 )
 
 foreach(suite IN LISTS DMG_TEST_SUITES)

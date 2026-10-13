@@ -16,6 +16,9 @@ int CPU::op_DAA() {
     if (getFlag(FLAG_H))
       A -= 0x6;
   }
+
+  if (A == 0) setFlag(FLAG_Z); else clearFlag(FLAG_Z);
+  clearFlag(FLAG_H);
   return 1;
 }
 
@@ -28,12 +31,14 @@ int CPU::op_CPL() {
 }
 
 int CPU::op_CCF() {
-  if (getFlag(FLAG_C))
+  bool flag_c_status = getFlag(FLAG_C);
+
+  clearFlag(FLAG_H);
+  clearFlag(FLAG_N);
+  if (flag_c_status)
     clearFlag(FLAG_C);
-
-  if (!getFlag(FLAG_C))
-    setFlag(FLAG_C);
-
+  else if (!flag_c_status)
+      setFlag(FLAG_C);
   return 1;
 }
 

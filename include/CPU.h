@@ -91,10 +91,18 @@ private:
   int op_ldhl_sp_n();
   int op_ldnn_sp(); // LD (nn) SP
   int op_ADD16bit_sp_n();
+  int op_RLCA();
+  int op_RLA();
+  int op_RRCA();
+  int op_RRA();
   // ============================== CPU-CB PREFIX INSTRUCTIONS =============================================
   int op_cb_prefix_handler(); // Handler especial para capturar el prefijo CB
   template<std::uint8_t CPU::*registro, bool hl_modified>
   int op_cb_swap_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_RLC_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_RL_n();
   // ============================== CPU MISCELLANEOUS INSTRUCTIONS =============================================
   int op_DAA();
   int op_CPL();
@@ -126,6 +134,8 @@ private:
   friend void OpcodeLoaders::load_ADD16BITS_block(CPU &cpu);
   friend void OpcodeLoaders::load_SWAP_n_cb_block(CPU &cpu);
   friend void OpcodeLoaders::load_MISSCELLANEOUS_block(CPU &cpu);
+  friend void OpcodeLoaders::load_ROTATES_block(CPU &cpu);
+  friend void OpcodeLoaders::load_ROTATES_CB_block(CPU &cpu);
   friend class CPUTestProbe;
 public:
   void loadOpcodes();

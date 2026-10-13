@@ -18,17 +18,23 @@
 //   Start::Zero     -> A..L = 00, F = 00, SP = 0000, PC = 0100 (por defecto).
 //                      Precondicion fija: las suites de opcodes no dependen del boot.
 //   Start::PostBoot -> el estado que deja CPU::initCpu() (salto de la boot ROM).
-// La memoria empieza a 0 en ambos casos.
+// La memoria empieza a 0 en ambos casos (IF = E1 e IE = 00, valores del BUS).
+// Ademas de registros y memoria, un paso puede comprobar el estado interno de
+// la CPU (IME, HALT, STOP) y los M-cycles que consumio ese paso.
+// Un paso puede "inyectar" escrituras en el BUS antes de ejecutarse (poke):
+// simula hardware externo (PPU, timer...) que todavia no existe.
 // =============================================================================
 
 enum class Start { Zero, PostBoot };
 
 // Estado esperado tras una instruccion. Solo se comprueban los campos fijados.
-// Uso: E().a(0x10).f(0x20).pc(0x0106).hl(0x0180).mem(0xC000, 0x0F)
+// Uso: E().a(0x10).f(0x20).pc(0x0106).hl(0x0180).mem(0xC000, 0x0F).cycles(2)
 struct Expect {
   std::optional<std::uint8_t> A, F, B, C, D, E, H, L;
   std::optional<std::uint16_t> PC, SP;
   std::vector<std::pair<std::uint16_t, std::uint8_t>> memory;
+  std::optional<bool> IME, HALTED, STOPPED;
+  std::optional<int> CYCLES; // M-cycles consumidos por el paso
 
   Expect &a(std::uint8_t v) { A = v; return *this; }
   Expect &f(std::uint8_t v) { F = v; return *this; }
@@ -47,6 +53,10 @@ struct Expect {
     memory.emplace_back(addr, v);
     return *this;
   }
+  Expect &ime(bool v) { IME = v; return *this; }
+  Expect &halted(bool v) { HALTED = v; return *this; }
+  Expect &stopped(bool v) { STOPPED = v; return *this; }
+  Expect &cycles(int v) { CYCLES = v; return *this; }
 };
 
 inline Expect E() { return Expect{}; }
@@ -54,6 +64,8 @@ inline Expect E() { return Expect{}; }
 struct Step {
   std::string desc; // "ADD A,C   0F+01" -> se imprime junto al numero de paso
   Expect exp;
+  // Escrituras en el BUS antes de ejecutar el paso (opcional): {{0xFFFF, 0x01}}
+  std::vector<std::pair<std::uint16_t, std::uint8_t>> poke = {};
 };
 
 // Ejecuta la suite y devuelve 0 si todos los pasos pasan, 1 si alguno falla.

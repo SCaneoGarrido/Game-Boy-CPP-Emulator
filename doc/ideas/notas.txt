@@ -1,0 +1,9 @@
+======================================================== Notas ========================================================
+Rotaciones y Desplazamientos:
+• Si el nombre tiene RLC / RRC: El bit da la vuelta directo. El viejo Carry no importa.
+• Si el nombre tiene RL / RR: El viejo Carry entra al registro, y el bit que sale se adueña del Carry.
+• Si el nombre tiene SL / SR: Entra un 0 fijo (desplazamiento lineal) y el bit que sale va al Carry.
+
+H9, src/MemoryBus.cpp: read(0xFF0F) devuelve el miembro IF, pero write(0xFF0F) escribe en io_registers[0x0F]. Por eso, al atender una interrupción, el bit de IF nunca se limpia, y ese es el paso que falla en interrupts. Además, un programa no puede pedir interrupciones. Se arregla añadiendo if (address == 0xFF0F) IF = value; en write.
+H10: read en 0xFEA0–0xFEFF lee fuera del array oam[160], lo que es comportamiento indefinido en C++.
+- Sigue pendiente un detalle cosmético: load_ld_block imprime "Instruccion HALT detectada" cada vez que se crea una CPU.

@@ -27,6 +27,10 @@ int main(int argc, char *argv[]) {
       0x89,       // 21. ADC A,C
       0xCE, 0x0F, // 22. ADC A,0x0F
       0x8E,       // 23. ADC A,(HL)
+      0x8A,       // 24. ADC A,D
+      0x8B,       // 25. ADC A,E
+      0x8C,       // 26. ADC A,H
+      0x8D,       // 27. ADC A,L
   };
   std::vector<std::uint8_t> data = {0x3A}; // 0x0180
 
@@ -54,6 +58,10 @@ int main(int argc, char *argv[]) {
       {"ADC A,C   FF+01+0", E().a(0x00).f(0xB0).pc(0x011E)},
       {"ADC A,0F  00+0F+1", E().a(0x10).f(0x20).pc(0x0120)},
       {"ADC A,(HL) 10+3A+0", E().a(0x4A).f(0x00).pc(0x0121)},
+      {"ADC A,D   4A+20+0", E().a(0x6A).f(0x00).pc(0x0122)},
+      {"ADC A,E   6A+E0+0", E().a(0x4A).f(0x10).pc(0x0123)},
+      {"ADC A,H   4A+01+1", E().a(0x4C).f(0x00).pc(0x0124)},
+      {"ADC A,L   4C+80+0", E().a(0xCC).f(0x00).pc(0x0125)},
   };
   return runSuiteMain(argc, argv, "add", code, data, steps);
 }

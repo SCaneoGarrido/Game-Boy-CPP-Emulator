@@ -85,11 +85,15 @@ void CPU::cpuCycle() {
     // DECODE (Decodificación)
     InstructionFunc funcion = opcode_table[current_opcode];
 
+    // EI armado por la instruccion ANTERIOR: IME se activa al terminar esta
+    bool ime_delay_armed = pending_ime_enable;
+
     // EXECUTE (Ejecución) y acumulación de ciclos
     MCycles += (this->*funcion)();
 
-    // EFECTO COLATERAL DE EI (Retraso diferido de 1 ciclo)
-    if (pending_ime_enable) {
+    // EFECTO COLATERAL DE EI (Retraso diferido de 1 instruccion)
+    // Si esta instruccion es DI, pending_ime_enable ya esta a false y IME sigue apagado.
+    if (ime_delay_armed && pending_ime_enable) {
         IME = true;
         pending_ime_enable = false;
     }
@@ -150,11 +154,10 @@ void CPU::loadOpcodes() {
   OpcodeLoaders::load_LOGICAL_block(*this);
   OpcodeLoaders::load_LD16BITS_block(*this);
   OpcodeLoaders::load_ADD16BITS_block(*this);
-  
-  // CB Prefix Opcodes 
   OpcodeLoaders::load_SWAP_n_cb_block(*this);
   OpcodeLoaders::load_MISSCELLANEOUS_block(*this);
-
+  OpcodeLoaders::load_ROTATES_block(*this);
+  OpcodeLoaders::load_ROTATES_CB_block(*this);
 }
 
 int CPU::b_illegal_opcode() {

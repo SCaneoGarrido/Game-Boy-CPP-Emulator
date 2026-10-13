@@ -1,0 +1,44 @@
+============================== CHECKLIST SUITE swap ==============================
+Suite:      Prefijo CB: SWAP r
+Opcodes:    CB 30-37
+Flags:      Z 0 0 0
+Test:       testing/swap/test_swap.cpp (20 pasos)
+Estado:     13/10/2026 -> 20/20 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+         IME/HALT/STOP = estado interno de la CPU (1/0)   M = M-cycles consumidos por el paso
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^swap$' --output-on-failure
+	./build/testing/test_swap        -> PASS/FAIL por paso + resumen
+	./build/testing/test_swap -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. (HL)=C000 (WRAM). SCF (paso 5) pone C=1 para comprobar que SWAP lo limpia.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,F1                            -> B=F1  PC=0102
+	[x]  2. SWAP B    F1 -> 1F                 -> B=1F  F=00 (----)  PC=0104  M=2
+	[x]  3. LD C,00                            -> C=00  PC=0106
+	[x]  4. SWAP C    00 -> 00 Z               -> C=00  F=80 (Z---)  PC=0108  M=2
+	[x]  5. SCF                                -> F=90 (Z--C)  PC=0109
+	[x]  6. LD D,AB                            -> D=AB  PC=010B
+	[x]  7. SWAP D    AB -> BA, limpia C       -> D=BA  F=00 (----)  PC=010D  M=2
+	[x]  8. LD E,0F                            -> E=0F  PC=010F
+	[x]  9. SWAP E    0F -> F0                 -> E=F0  F=00 (----)  PC=0111  M=2
+	[x] 10. LD H,12                            -> H=12  PC=0113
+	[x] 11. SWAP H    12 -> 21                 -> H=21  F=00 (----)  PC=0115  M=2
+	[x] 12. LD L,34                            -> L=34  PC=0117
+	[x] 13. SWAP L    34 -> 43                 -> L=43  F=00 (----)  PC=0119  M=2
+	[x] 14. LD A,5A                            -> A=5A  PC=011B
+	[x] 15. SWAP A    5A -> A5                 -> A=A5  F=00 (----)  PC=011D  M=2
+	[x] 16. LD HL,C000                         -> HL=C000  PC=0120
+	[x] 17. LD (HL),C3                         -> (C000)=C3  PC=0122
+	[x] 18. SWAP (HL) C3 -> 3C                 -> (C000)=3C  F=00 (----)  PC=0124  M=4
+	[x] 19. LD (HL),00                         -> (C000)=00  PC=0126
+	[x] 20. SWAP (HL) 00 -> 00 Z               -> (C000)=00  F=80 (Z---)  PC=0128  M=4
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* Ninguno abierto.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

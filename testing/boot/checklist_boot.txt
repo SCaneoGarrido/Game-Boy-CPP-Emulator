@@ -22,5 +22,6 @@ Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no regi
 
 3.- NOTAS Y HALLAZGOS RELACIONADOS
 	* B9 [CERRADO 08/10/2026] initCpu carga el estado post-boot del DMG.
-	* B13 [ABIERTO] BUS deja bios_mapped=true aunque se salte el boot: 0000-00FF leen la boot ROM en vez del cartucho.
+	* B13 [CERRADO 13/10/2026] BUS::initMemoryBus deja bios_mapped=false: 0000-00FF se leen del cartucho
+	  (verificado en la suite interrupts: el vector 0040 lee la ROM).
 	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

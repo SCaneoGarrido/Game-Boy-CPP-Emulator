@@ -1,7 +1,9 @@
 ================================================== CHECKLIST DE VALIDACION - OPCODES DMG ==================================================
 Fecha:        26/09/2026
-Actualizado:  08/10/2026 - A1, A5, A6 y B9 corregidos: las 15 suites pasan
-Alcance:      Opcodes implementados en src/cpuinstructions/*.cpp y registrados en utils/OpcodesLoaders.cpp
+Actualizado:  13/10/2026 - build reparado (H1), suites misc/control/interrupts/rotates/cbrot/swap:
+              20 de 21 suites pasan (falla interrupts por H9)
+Alcance:      Opcodes implementados en src/cpuinstructions/, src/cpuinstructionsCB/ y src/cpumiscellaneous/,
+              registrados en utils/OpcodesLoaders.cpp
 Banco:        testing/ - una suite por familia, cada una con su checklist:
               testing/<suite>/test_<suite>.cpp + testing/<suite>/checklist_<suite>.txt
 
@@ -14,14 +16,16 @@ Leyenda:
 
 	Flags: ZNHC  ->  F = Z(0x80) N(0x40) H(0x20) C(0x10). Los 4 bits bajos de F siempre son 0.
 
-	Resumen 08/10/2026 (ctest, build limpio):
-	* 15 de 15 suites pasan: 268 pasos validados (14 de opcodes + boot).
-	* Hallazgos abiertos: B13 (boot ROM mapeada tras saltar el boot) y A3 (ADD 16 bits sin commitear).
+	Resumen 13/10/2026 (ctest, build limpio):
+	* 20 de 21 suites pasan: 406 de 407 pasos validados.
+	* Falla interrupts, caso 6: IF no se limpia al atender la interrupcion (H9, BUS).
+	* Hallazgos abiertos: H9 (registro IF en el BUS) y H10 (lectura OAM fuera de rango). Cosmetico: load_ld_block imprime
+	  "Instruccion HALT detectada" cada vez que se construye una CPU.
 
 
 1.- COMO EJECUTAR
 	cmake -S . -B build && cmake --build build
-	ctest --test-dir build --output-on-failure            -> las 15 suites
+	ctest --test-dir build --output-on-failure            -> las 21 suites
 	ctest --test-dir build -R '^stack$' --output-on-failure -> una suite
 	./build/testing/test_<suite>                          -> PASS/FAIL por paso + resumen
 	./build/testing/test_<suite> -v                       -> ademas, traza de CPU/BUS y showCPUINFO()
@@ -33,11 +37,13 @@ Leyenda:
 	    Start::Zero (por defecto) -> A..L=00, F=00, SP=0000, PC=0100. Precondicion fija: las
 	      suites de opcodes no dependen del estado de arranque de la CPU.
 	    Start::PostBoot -> el estado de CPU::initCpu(). Solo lo usa la suite boot.
-	* Tras cada instruccion compara solo los campos indicados en el paso (registros, F, PC, SP
-	  y memoria leida con bus.read). Accede al estado privado de la CPU con CPUTestProbe
+	* Tras cada instruccion compara solo los campos indicados en el paso (registros, F, PC, SP,
+	  memoria leida con bus.read, IME, HALT, STOP y M-cycles consumidos por el paso).
+	* Un paso puede inyectar escrituras en el BUS antes de ejecutarse (poke), para simular
+	  hardware que aun no existe (p.ej. activar IE para despertar un HALT). Accede al estado privado de la CPU con CPUTestProbe
 	  (friend en include/CPU.h): lectura, y escritura solo para fijar Start::Zero.
-	* Si el siguiente opcode no esta registrado, marca FAIL y detiene la suite, en lugar
-	  del exit(1) de b_illegal_opcode.
+	* Si el siguiente opcode no esta registrado (tambien el segundo byte de un CB), marca FAIL
+	  y detiene la suite, en lugar del exit(1) de b_illegal_opcode.
 	* Devuelve 0 si todo pasa y 1 si algo falla (ctest usa ese codigo).
 	* Anadir una suite: crear testing/<suite>/test_<suite>.cpp + checklist_<suite>.txt y
 	  anadir <suite> a DMG_TEST_SUITES en testing/CMakeLists.txt.
@@ -78,12 +84,21 @@ Leyenda:
 	|B8-BF, FE            |CP n                       |1/2      |si         |[x]    |logic         |
 	|09 19 29 39          |ADD HL,rr / ADD HL,SP      |2        |si         |[x]    |add16         |
 	|E8                   |ADD SP,e8                  |4        |si         |[x]    |add16         |
-	|76                   |HALT                       |1        |NO         |[ ]    |-             |
-	|10                   |STOP                       |1        |NO         |[ ]    |-             |
+	|27                   |DAA                        |1        |si         |[x]    |misc          |
+	|2F                   |CPL                        |1        |si         |[x]    |misc          |
+	|37 3F                |SCF / CCF                  |1        |si         |[x]    |misc          |
+	|F3 FB                |DI / EI (retraso de EI)    |1        |si         |[x]    |control       |
+	|76                   |HALT (+ HALT bug)          |1        |si         |[x]    |control       |
+	|10                   |STOP                       |1        |si         |[x]    |control       |
+	|-                    |Despacho de interrupcion   |5        |-          |[!]    |interrupts    |
+	|07 0F 17 1F          |RLCA / RRCA / RLA / RRA    |1        |si         |[x]    |rotates       |
+	|CB 00-07             |RLC r / RLC (HL)           |2/4      |si         |[x]    |cbrot         |
+	|CB 10-17             |RL r / RL (HL)             |2/4      |si         |[x]    |cbrot         |
+	|CB 30-37             |SWAP r / SWAP (HL)         |2/4      |si         |[x]    |swap          |
 
-	1/2 = 1 ciclo con registro, 2 con (HL) o inmediato.
-	*   ADC A,D / E / H / L (8A-8D) sin caso individual.
-	Los M-cycles aun no se validan: CPU::MCycles se acumula (B10) pero no se expone.
+	1/2 = 1 ciclo con registro, 2 con (HL) o inmediato. 2/4 = prefijo CB con registro / (HL).
+	La columna M-cycles se valida (paso a paso) en las suites misc, control, interrupts, rotates,
+	cbrot y swap. En las suites anteriores aun no se comprueba.
 
 
 3.- SUITES (detalle de cada caso en testing/<suite>/checklist_<suite>.txt)
@@ -95,7 +110,7 @@ Leyenda:
 	|ld16     |  18  |[x] 18/18  |LD A,(rr) / LD (rr),A con BC, DE, HL+, HL-                |
 	|inc      |  26  |[x] 26/26  |INC r8 / (HL) / rr / SP, C conservado                     |
 	|dec      |  22  |[x] 22/22  |DEC r8 / (HL) / rr / SP, C conservado                     |
-	|add      |  23  |[x] 23/23  |ADD A,n y ADC A,n                                         |
+	|add      |  27  |[x] 27/27  |ADD A,n y ADC A,n (incluye ADC A,D/E/H/L)                 |
 	|sub      |  21  |[x] 21/21  |SUB n y SBC A,n                                           |
 	|and      |  16  |[x] 16/16  |AND n, C limpiado                                         |
 	|add16    |  24  |[x] 24/24  |ADD HL,rr y ADD SP,e8                                     |
@@ -105,6 +120,12 @@ Leyenda:
 	|stack    |  16  |[x] 16/16  |PUSH / POP, POP AF limpia los 4 bits bajos de F           |
 	|ldh      |  17  |[x] 17/17  |LDH, LD (C), LD (a16) en HRAM/WRAM, espejo echo           |
 	|mem      |  18  |[x] 18/18  |persistencia en WRAM de las escrituras a memoria          |
+	|misc     |  35  |[x] 35/35  |DAA tras ADD/SUB, CPL, SCF, CCF, NOP                      |
+	|control  |  15  |[x] 15/15  |DI, EI con retraso, HALT, HALT bug, STOP                  |
+	|interrupts|  7  |[!]  6/7   |despacho V-Blank: IME, PUSH PC, vector, 5 M-cycles (H9)   |
+	|rotates  |  23  |[x] 23/23  |RLCA RRCA RLA RRA, Z siempre a 0                          |
+	|cbrot    |  35  |[x] 35/35  |CB RLC r/(HL), CB RL r/(HL)                               |
+	|swap     |  20  |[x] 20/20  |CB SWAP r/(HL)                                            |
 
 
 4.- HALLAZGOS
@@ -150,12 +171,13 @@ Leyenda:
 
 	B12 [CERRADO en main.cpp] el bucle de pruebas iteraba sizeof(std::vector).
 
-	B13 [MEDIO][ABIERTO] src/MemoryBus.cpp, BUS::initMemoryBus(): deja bios_mapped=true.
+	B13 [MEDIO][CERRADO 13/10/2026] src/MemoryBus.cpp, BUS::initMemoryBus(): deja bios_mapped=true.
 	    Como la CPU arranca ya en estado post-boot (B9), la boot ROM deberia estar desmapeada
 	    (en hardware real el boot termina escribiendo en FF50). Hoy las lecturas de 0000-00FF
 	    devuelven boot_rom (ceros) en vez del cartucho: afectara a RST, interrupciones y
 	    al leer la cabecera. Correccion: bios_mapped=false cuando se salta el boot (o
 	    mantenerlo en true solo si se carga una boot ROM real con load_boot_rom).
+	    Verificado 13/10/2026: initMemoryBus deja bios_mapped=false.
 
 	--- 4.2 Familia ADD 16 bits y LD 16 bits (07/10/2026) ---
 	Archivos: src/cpuinstructions/CPU_ADD16BIT_Opcodes.cpp (op_ADD16BIT_HL_n, op_ADD16bit_sp_n),
@@ -171,8 +193,8 @@ Leyenda:
 	    faltaban CPU_LOGICAL/LD16BIT/ADD16BIT). Corregido el 07/10/2026: biblioteca dmg_core con
 	    file(GLOB ... CONFIGURE_DEPENDS) sobre src/ y src/cpuinstructions/, C++17, y testing/.
 
-	A3  [BAJO][ABIERTO] ADD SP,e8 (op_ADD16bit_sp_n, registro de 0xE8 y declaracion en CPU.h)
-	    aun sin commitear a fecha 07/10/2026.
+	A3  [BAJO][CERRADO] ADD SP,e8 (op_ADD16bit_sp_n, registro de 0xE8 y declaracion en CPU.h)
+	    aun sin commitear a fecha 07/10/2026. Commiteado en aefe897.
 
 	A4  [COSMETICO] ADD SP,e8 extiende el signo a mano y op_ldhl_sp_n usa std::int8_t;
 	    misma semantica, convendria unificar el estilo.
@@ -187,25 +209,73 @@ Leyenda:
 	    lee un archivo. FileUtils.cpp vuelve a formar parte de dmg_core.
 
 
+	--- 4.3 Miscelaneas, control, rotaciones y prefijo CB (13/10/2026) ---
+	Archivos: src/cpumiscellaneous/CPU_MISCELLANEOUS_Opcodes.cpp, src/cpuinstructions/CPU_ROTATES_Opcodes.cpp,
+	          src/cpuinstructionsCB/CPU_SWAP_Opcodes.cpp, src/cpuinstructionsCB/CPU_ROTATES_CB.cpp,
+	          src/CPU.cpp (cpuCycle, loadOpcodes), utils/OpcodesLoaders.cpp, CMakeLists.txt.
+
+	H1  [CRITICO][CERRADO] El GLOB del CMakeLists.txt raiz no incluia src/cpumiscellaneous/ ni
+	    src/cpuinstructionsCB/: ni DMGE ni las suites enlazaban (undefined reference a op_nop,
+	    op_DAA, op_cb_swap_n...). Corregido 13/10/2026 anadiendo ambas carpetas al GLOB.
+
+	H2  [ALTO][CERRADO] loadOpcodes() no llamaba a load_ROTATES_block ni a load_ROTATES_CB_block.
+	    Verificado 13/10/2026: suites rotates y cbrot.
+
+	H3  [ALTO][CERRADO] CB 06 (RLC (HL)) y CB 16 (RL (HL)) se registraban con <&CPU::A,false>.
+	    Verificado 13/10/2026: suite cbrot, casos 17, 34 y 35.
+
+	H4  [ALTO][CERRADO] CCF limpiaba C y lo volvia a poner (C siempre 1) y no limpiaba N ni H.
+	    Verificado 13/10/2026: suite misc, casos 28, 29 y 34.
+
+	H5  [MEDIO][CERRADO] DAA no actualizaba Z ni limpiaba H.
+	    Verificado 13/10/2026: suite misc, casos 8, 16, 20 y 24.
+
+	H6  [MEDIO][CERRADO] RLCA ponia Z si A==0 (en hardware RLCA/RRCA/RLA/RRA dejan Z=0).
+	    Verificado 13/10/2026: suite rotates, caso 11.
+
+	H7  [MEDIO][CERRADO] EI activaba IME al final del propio EI (sin el retraso de una instruccion).
+	    Parche en CPU::cpuCycle(): se recuerda si el EI venia de la instruccion anterior y solo
+	    entonces se activa IME; DI anula el EI pendiente. Verificado: suite control, casos 2-7.
+
+	H8  [COSMETICO][PARCIAL] Comentarios de load_SWAP_n_cb_block corregidos. Sigue abierto:
+	    load_ld_block imprime "Instruccion HALT detectada" cada vez que se construye una CPU.
+
+	H9  [ALTO][ABIERTO] src/MemoryBus.cpp: read(0xFF0F) devuelve el miembro IF, pero write(0xFF0F)
+	    cae en la rama de I/O y escribe io_registers[0x0F]. Consecuencias: al atender una
+	    interrupcion la CPU no limpia el bit en IF (suite interrupts, caso 6: FF0F=E1 en vez de
+	    E0) y un programa no puede pedir ni cancelar interrupciones con LDH (FF0F),A.
+	    Correccion propuesta: en BUS::write, si address == 0xFF0F, IF = value (antes de la rama I/O).
+
+	H10 [MEDIO][ABIERTO] src/MemoryBus.cpp, BUS::read: la rama 0xFE00-0xFEFF lee oam[address - 0xFE00],
+	    pero oam tiene 160 bytes. Leer 0xFEA0-0xFEFF se sale del array (comportamiento indefinido).
+	    write ya ignora esa zona. Correccion propuesta: limitar la rama de lectura a 0xFE9F y
+	    devolver 0x00/0xFF para 0xFEA0-0xFEFF. Sin suite: no se prueba un acceso fuera de rango.
+
+
 5.- PENDIENTES
 
 	--- 5.1 Pruebas ---
 	[x] logic, ld16imm, stack, ldh, mem: creadas el 07/10/2026 (testing/).
 	[x] C conservado en INC/DEC y limpiado en AND: anadido a inc, dec y and.
 	[x] A1 y A5 corregidos: add16 y ldsp pasan (08/10/2026).
-	[ ] Cargar una ROM desde main.cpp con read_binary_file (ya posible tras A6).
-	[ ] ADC A,D / E / H / L (8A-8D) con caso individual en add.
-	[ ] Exponer CPU::MCycles en CPUTestProbe y validar la columna M-cycles por paso.
+	[x] Cargar una ROM desde main.cpp con read_binary_file: ./build/DMGE <rom.gb> [ciclos] (13/10/2026).
+	[x] ADC A,D / E / H / L (8A-8D) con caso individual en add (13/10/2026).
+	[x] Exponer CPU::MCycles en CPUTestProbe y validar M-cycles por paso (13/10/2026, suites nuevas).
+	[ ] Anadir .cycles() a las suites anteriores (ld, inc, dec, add, sub, ...).
+	[ ] Corregir H9 y anadir a interrupts: prioridad entre interrupciones y peticion por LDH (FF0F),A.
 	[x] B9 corregido: suite boot creada y precondicion Start::Zero en el resto.
-	[ ] Corregir B13 y anadir a boot un caso que lea 0000-00FF desde el cartucho.
+	[x] B13 corregido (bios_mapped=false). Falta un caso en boot que lea un byte no nulo de 0000-00FF
+	    (el arnes solo coloca bytes en 0100 y 0180).
 	[ ] Registros de I/O post-boot (LCDC=91, STAT, BGP=FC, ...) cuando existan PPU y timers.
 
 	--- 5.2 Opcodes sin implementar ---
 	[ ] JP / JR / CALL / RET / RETI / RST (con condiciones NZ Z NC C)
-	[ ] DAA (27), CPL (2F), SCF (37), CCF (3F)
-	[ ] RLCA RRCA RLA RRA (07 0F 17 1F)
-	[ ] HALT (76), STOP (10), DI (F3), EI (FB)
-	[ ] Prefijo CB (rotaciones, desplazamientos, BIT/RES/SET)
+	[x] DAA (27), CPL (2F), SCF (37), CCF (3F)
+	[x] RLCA RRCA RLA RRA (07 0F 17 1F)
+	[x] HALT (76), STOP (10), DI (F3), EI (FB)
+	[x] Prefijo CB: SWAP (30-37), RLC (00-07), RL (10-17)
+	[ ] Prefijo CB: RRC (08-0F), RR (18-1F), SLA (20-27), SRA (28-2F), SRL (38-3F)
+	[ ] Prefijo CB: BIT (40-7F), RES (80-BF), SET (C0-FF)
 
 
 6.- REFERENCIAS

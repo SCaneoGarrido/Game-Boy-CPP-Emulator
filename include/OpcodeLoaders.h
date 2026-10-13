@@ -17,6 +17,10 @@ namespace OpcodeLoaders {
   
   // Opcodes Miscellaneous
   void load_MISSCELLANEOUS_block(CPU& cpu);
+  
+  // Opcode Rotates & Shift
+  void load_ROTATES_block(CPU& cpu);
+  void load_ROTATES_CB_block(CPU& cpu);
 }
 
 
