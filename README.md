@@ -13,7 +13,7 @@ El proyecto se centra hoy en el núcleo de la CPU (LR35902) y el bus de memoria.
 - Registros de 8 bits `A F B C D E H L`, pares `AF BC DE HL`, `PC` y `SP`.
 - Arranque en el estado post-boot del DMG (`A=01 F=B0 BC=0013 DE=00D8 HL=014D SP=FFFE PC=0100`), saltando la boot ROM.
 - Banderas `Z N H C` en el registro `F`; los 4 bits bajos siempre quedan a cero.
-- Tabla principal `opcode_table[256]` y tabla del prefijo `opcode_table_cb[256]` con punteros a métodos miembro; los opcodes sin registrar apuntan a `b_illegal_opcode()`.
+- Tabla principal `opcode_table[256]` y tabla del prefijo `opcode_table_cb[256]` con punteros a métodos miembro; los opcodes sin registrar apuntan a `b_illegal_opcode()`. Cada operación CB devuelve el total de M-cycles de la instrucción, prefijo incluido.
 - Contador de **M-cycles** acumulado por instrucción.
 - Interrupciones: `IME`, despacho por prioridad a los vectores `0040–0060` (5 M-cycles), `HALT` con *HALT bug*, `STOP`, y `EI` con su retraso de una instrucción.
 
@@ -37,7 +37,8 @@ El proyecto se centra hoy en el núcleo de la CPU (LR35902) y el bus de memoria.
 | `DAA`, `CPL`, `SCF`, `CCF` | `27 2F 37 3F` | `misc` |
 | `DI`, `EI`, `HALT`, `STOP` | `F3 FB 76 10` | `control`, `interrupts` |
 | `RLCA`, `RRCA`, `RLA`, `RRA` | `07 0F 17 1F` | `rotates` |
-| Prefijo `CB`: `RLC`, `RL` | `CB 00–07`, `CB 10–17` | `cbrot` |
+| Prefijo `CB`: `RLC`, `RRC`, `RL`, `RR` | `CB 00–1F` | `cbrot` |
+| Prefijo `CB`: `SLA`, `SRA`, `SRL` | `CB 20–2F`, `CB 38–3F` | `cbshift` |
 | Prefijo `CB`: `SWAP` | `CB 30–37` | `swap` |
 
 ### Bus de memoria
@@ -52,7 +53,7 @@ El proyecto se centra hoy en el núcleo de la CPU (LR35902) y el bus de memoria.
 | `0xE000–0xFDFF` | Echo RAM | Espejo de WRAM |
 | `0xFE00–0xFE9F` | OAM | Lectura y escritura |
 | `0xFF00–0xFF7F` | Registros de E/S | Lectura y escritura (sin periféricos detrás) |
-| `0xFF0F` | IF | Lectura; la escritura aún no llega a `IF` (ver limitaciones) |
+| `0xFF0F` | IF | Lectura y escritura (los bits 5–7 se leen a 1) |
 | `0xFF80–0xFFFE` | HRAM | Lectura y escritura |
 | `0xFFFF` | IE | Lectura y escritura |
 
@@ -90,7 +91,7 @@ CMake compila el núcleo como la biblioteca estática `dmg_core`, que comparten 
 │   ├── CPU.cpp                    # Ciclo de CPU, interrupciones, flags, pila
 │   ├── MemoryBus.cpp              # Mapa de memoria
 │   ├── cpuinstructions/           # LD, LD16, INC, DEC, ADD, SUB, lógicas, ADD16, rotaciones
-│   ├── cpuinstructionsCB/         # Prefijo CB: SWAP, RLC, RL
+│   ├── cpuinstructionsCB/         # Prefijo CB: rotaciones, desplazamientos y SWAP
 │   └── cpumiscellaneous/          # DAA, CPL, SCF, CCF, NOP, HALT, STOP, DI, EI
 ├── utils/                         # Registro de opcodes y lectura de archivos binarios
 ├── testing/
@@ -139,7 +140,7 @@ ctest --test-dir build -R '^misc$'            # una suite
 
 Las suites arrancan con los registros a cero (`Start::Zero`) para no depender del estado de arranque; la suite `boot` valida precisamente ese estado post-boot. El resumen de cobertura y la lista de hallazgos están en [`doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt`](doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt).
 
-Estado a 13/10/2026: **20 de 21 suites pasan** (406 de 407 pasos). La suite `interrupts` falla en un caso por la limitación del registro `IF` descrita abajo.
+Estado a 14/10/2026: **las 22 suites pasan** (488 pasos).
 
 ## Añadir o modificar instrucciones
 
@@ -151,9 +152,9 @@ Estado a 13/10/2026: **20 de 21 suites pasan** (406 de 407 pasos). La suite `int
 
 ## Limitaciones conocidas y próximos pasos
 
-- **Registro IF:** `BUS::write(0xFF0F)` escribe en el área genérica de E/S mientras que `BUS::read(0xFF0F)` devuelve el miembro `IF`; por eso el bit de una interrupción atendida no se limpia y un programa no puede solicitar interrupciones.
+- Leer `0xFEA0–0xFEFF` se sale del array de OAM (debería devolver un valor fijo).
 - Saltos y llamadas: `JP`, `JR`, `CALL`, `RET`, `RETI`, `RST` (con condiciones `NZ Z NC C`).
-- Resto del prefijo `CB`: `RRC`, `RR`, `SLA`, `SRA`, `SRL`, `BIT`, `RES`, `SET`.
+- Resto del prefijo `CB`: `BIT`, `RES`, `SET`.
 - Validar los M-cycles también en las suites anteriores a las misceláneas.
 - MBC y RAM externa para cartuchos de más de 32 KB.
 - PPU, timers, joypad (salida de `STOP`) y audio.

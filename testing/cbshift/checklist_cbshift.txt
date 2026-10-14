@@ -1,0 +1,79 @@
+============================== CHECKLIST SUITE cbshift ==============================
+Suite:      Prefijo CB: SLA r, SRA r y SRL r
+Opcodes:    CB 20-27, CB 28-2F, CB 38-3F
+Flags:      Z 0 0 C
+Test:       testing/cbshift/test_cbshift.cpp (54 pasos)
+Estado:     14/10/2026 -> 54/54 OK
+
+Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
+         Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
+         IME/HALT/STOP = estado interno de la CPU (1/0)   M = M-cycles consumidos por el paso
+
+1.- COMO EJECUTAR
+	ctest --test-dir build -R '^cbshift$' --output-on-failure
+	./build/testing/test_cbshift        -> PASS/FAIL por paso + resumen
+	./build/testing/test_cbshift -v     -> ademas, traza de CPU/BUS y showCPUINFO()
+	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
+	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
+	Sin datos. (HL)=C000 (WRAM). CPL (pasos 5 y 27) pone N y H a 1 para comprobar que se limpian.
+
+2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
+	[x]  1. LD B,80                            -> B=80  PC=0102
+	[x]  2. SLA B     80 -> 00 Z C             -> B=00  F=90 (Z--C)  PC=0104  M=2
+	[x]  3. LD C,41                            -> C=41  PC=0106
+	[x]  4. SLA C     41 -> 82                 -> C=82  F=00 (----)  PC=0108  M=2
+	[x]  5. CPL       A=FF, N H a 1            -> A=FF  F=60 (-NH-)  PC=0109
+	[x]  6. LD D,C1                            -> D=C1  PC=010B
+	[x]  7. SLA D     C1 -> 82 C, limpia N H   -> D=82  F=10 (---C)  PC=010D  M=2
+	[x]  8. LD E,FF                            -> E=FF  PC=010F
+	[x]  9. SLA E     FF -> FE C               -> E=FE  F=10 (---C)  PC=0111  M=2
+	[x] 10. LD H,40                            -> H=40  PC=0113
+	[x] 11. SLA H     40 -> 80                 -> H=80  F=00 (----)  PC=0115  M=2
+	[x] 12. LD L,08                            -> L=08  PC=0117
+	[x] 13. SLA L     08 -> 10                 -> L=10  F=00 (----)  PC=0119  M=2
+	[x] 14. LD A,7F                            -> A=7F  PC=011B
+	[x] 15. SLA A     7F -> FE                 -> A=FE  F=00 (----)  PC=011D  M=2
+	[x] 16. LD HL,C000                         -> HL=C000  PC=0120
+	[x] 17. LD (HL),C0                         -> (C000)=C0  PC=0122
+	[x] 18. SLA (HL)  C0 -> 80 C               -> (C000)=80  F=10 (---C)  PC=0124  M=4
+	[x] 19. LD B,81                            -> B=81  PC=0126
+	[x] 20. SRA B     81 -> C0 C (conserva bit 7) -> B=C0  F=10 (---C)  PC=0128  M=2
+	[x] 21. LD C,01                            -> C=01  PC=012A
+	[x] 22. SRA C     01 -> 00 Z C             -> C=00  F=90 (Z--C)  PC=012C  M=2
+	[x] 23. LD D,7E                            -> D=7E  PC=012E
+	[x] 24. SRA D     7E -> 3F                 -> D=3F  F=00 (----)  PC=0130  M=2
+	[x] 25. LD E,FF                            -> E=FF  PC=0132
+	[x] 26. SRA E     FF -> FF C               -> E=FF  F=10 (---C)  PC=0134  M=2
+	[x] 27. CPL       A=01, N H a 1            -> A=01  F=70 (-NHC)  PC=0135
+	[x] 28. LD H,80                            -> H=80  PC=0137
+	[x] 29. SRA H     80 -> C0, limpia N H C   -> H=C0  F=00 (----)  PC=0139  M=2
+	[x] 30. LD L,02                            -> L=02  PC=013B
+	[x] 31. SRA L     02 -> 01                 -> L=01  F=00 (----)  PC=013D  M=2
+	[x] 32. LD A,40                            -> A=40  PC=013F
+	[x] 33. SRA A     40 -> 20                 -> A=20  F=00 (----)  PC=0141  M=2
+	[x] 34. LD HL,C000                         -> HL=C000  PC=0144
+	[x] 35. LD (HL),85                         -> (C000)=85  PC=0146
+	[x] 36. SRA (HL)  85 -> C2 C               -> (C000)=C2  F=10 (---C)  PC=0148  M=4
+	[x] 37. LD B,81                            -> B=81  PC=014A
+	[x] 38. SRL B     81 -> 40 C (entra 0)     -> B=40  F=10 (---C)  PC=014C  M=2
+	[x] 39. LD C,01                            -> C=01  PC=014E
+	[x] 40. SRL C     01 -> 00 Z C             -> C=00  F=90 (Z--C)  PC=0150  M=2
+	[x] 41. LD D,FF                            -> D=FF  PC=0152
+	[x] 42. SRL D     FF -> 7F C               -> D=7F  F=10 (---C)  PC=0154  M=2
+	[x] 43. LD E,80                            -> E=80  PC=0156
+	[x] 44. SRL E     80 -> 40                 -> E=40  F=00 (----)  PC=0158  M=2
+	[x] 45. LD H,02                            -> H=02  PC=015A
+	[x] 46. SRL H     02 -> 01                 -> H=01  F=00 (----)  PC=015C  M=2
+	[x] 47. LD L,10                            -> L=10  PC=015E
+	[x] 48. SRL L     10 -> 08                 -> L=08  F=00 (----)  PC=0160  M=2
+	[x] 49. LD A,F0                            -> A=F0  PC=0162
+	[x] 50. SRL A     F0 -> 78                 -> A=78  F=00 (----)  PC=0164  M=2
+	[x] 51. LD HL,C000                         -> HL=C000  PC=0167
+	[x] 52. LD (HL),03                         -> (C000)=03  PC=0169
+	[x] 53. SRL (HL)  03 -> 01 C               -> (C000)=01  F=10 (---C)  PC=016B  M=4
+	[x] 54. SRL (HL)  01 -> 00 Z C             -> (C000)=00  F=90 (Z--C)  PC=016D  M=4
+
+3.- NOTAS Y HALLAZGOS RELACIONADOS
+	* SRA conserva el bit 7 (casos 20, 26, 29, 36); SRL mete un 0 (casos 38, 42).
+	* N3 [CERRADO 14/10/2026] comentarios de SRA en load_SHIFT_CB_block decian SLA.
+	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

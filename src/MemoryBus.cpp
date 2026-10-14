@@ -116,6 +116,11 @@ void BUS::write(std::uint16_t address, std::uint8_t value) {
     return; 
   }
   
+  // 6a. IF (Interrupt Flag): read(0xFF0F) devuelve este mismo miembro
+  else if (address == 0xFF0F) {
+    IF = value & 0x1F;
+  }
+
   // 6. Registros de I/O (Joypad, Timers, Sonido...)
   else if (address >= 0xFF00 && address <= 0xFF7F) {
     if (address == 0xFF50) {

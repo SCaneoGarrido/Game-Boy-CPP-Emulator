@@ -1,7 +1,7 @@
 ================================================== CHECKLIST DE VALIDACION - OPCODES DMG ==================================================
 Fecha:        26/09/2026
-Actualizado:  13/10/2026 - build reparado (H1), suites misc/control/interrupts/rotates/cbrot/swap:
-              20 de 21 suites pasan (falla interrupts por H9)
+Actualizado:  14/10/2026 - CB RRC/RR/SLA/SRA/SRL, suite cbshift, cbrot ampliada, H9 y N2 corregidos:
+              las 22 suites pasan
 Alcance:      Opcodes implementados en src/cpuinstructions/, src/cpuinstructionsCB/ y src/cpumiscellaneous/,
               registrados en utils/OpcodesLoaders.cpp
 Banco:        testing/ - una suite por familia, cada una con su checklist:
@@ -16,16 +16,15 @@ Leyenda:
 
 	Flags: ZNHC  ->  F = Z(0x80) N(0x40) H(0x20) C(0x10). Los 4 bits bajos de F siempre son 0.
 
-	Resumen 13/10/2026 (ctest, build limpio):
-	* 20 de 21 suites pasan: 406 de 407 pasos validados.
-	* Falla interrupts, caso 6: IF no se limpia al atender la interrupcion (H9, BUS).
-	* Hallazgos abiertos: H9 (registro IF en el BUS) y H10 (lectura OAM fuera de rango). Cosmetico: load_ld_block imprime
+	Resumen 14/10/2026 (ctest, build limpio):
+	* 22 de 22 suites pasan: 488 pasos validados.
+	* Hallazgos abiertos: H10 (lectura OAM fuera de rango). Cosmetico: load_ld_block imprime
 	  "Instruccion HALT detectada" cada vez que se construye una CPU.
 
 
 1.- COMO EJECUTAR
 	cmake -S . -B build && cmake --build build
-	ctest --test-dir build --output-on-failure            -> las 21 suites
+	ctest --test-dir build --output-on-failure            -> las 22 suites
 	ctest --test-dir build -R '^stack$' --output-on-failure -> una suite
 	./build/testing/test_<suite>                          -> PASS/FAIL por paso + resumen
 	./build/testing/test_<suite> -v                       -> ademas, traza de CPU/BUS y showCPUINFO()
@@ -90,15 +89,20 @@ Leyenda:
 	|F3 FB                |DI / EI (retraso de EI)    |1        |si         |[x]    |control       |
 	|76                   |HALT (+ HALT bug)          |1        |si         |[x]    |control       |
 	|10                   |STOP                       |1        |si         |[x]    |control       |
-	|-                    |Despacho de interrupcion   |5        |-          |[!]    |interrupts    |
+	|-                    |Despacho de interrupcion   |5        |-          |[x]    |interrupts    |
 	|07 0F 17 1F          |RLCA / RRCA / RLA / RRA    |1        |si         |[x]    |rotates       |
 	|CB 00-07             |RLC r / RLC (HL)           |2/4      |si         |[x]    |cbrot         |
+	|CB 08-0F             |RRC r / RRC (HL)           |2/4      |si         |[x]    |cbrot         |
 	|CB 10-17             |RL r / RL (HL)             |2/4      |si         |[x]    |cbrot         |
+	|CB 18-1F             |RR r / RR (HL)             |2/4      |si         |[x]    |cbrot         |
+	|CB 20-27             |SLA r / SLA (HL)           |2/4      |si         |[x]    |cbshift       |
+	|CB 28-2F             |SRA r / SRA (HL)           |2/4      |si         |[x]    |cbshift       |
+	|CB 38-3F             |SRL r / SRL (HL)           |2/4      |si         |[x]    |cbshift       |
 	|CB 30-37             |SWAP r / SWAP (HL)         |2/4      |si         |[x]    |swap          |
 
 	1/2 = 1 ciclo con registro, 2 con (HL) o inmediato. 2/4 = prefijo CB con registro / (HL).
 	La columna M-cycles se valida (paso a paso) en las suites misc, control, interrupts, rotates,
-	cbrot y swap. En las suites anteriores aun no se comprueba.
+	cbrot, swap y cbshift. En las suites anteriores aun no se comprueba.
 
 
 3.- SUITES (detalle de cada caso en testing/<suite>/checklist_<suite>.txt)
@@ -122,10 +126,11 @@ Leyenda:
 	|mem      |  18  |[x] 18/18  |persistencia en WRAM de las escrituras a memoria          |
 	|misc     |  35  |[x] 35/35  |DAA tras ADD/SUB, CPL, SCF, CCF, NOP                      |
 	|control  |  15  |[x] 15/15  |DI, EI con retraso, HALT, HALT bug, STOP                  |
-	|interrupts|  7  |[!]  6/7   |despacho V-Blank: IME, PUSH PC, vector, 5 M-cycles (H9)   |
+	|interrupts| 11  |[x] 11/11  |peticion por IF, prioridad, despacho V-Blank, 5 M-cycles  |
 	|rotates  |  23  |[x] 23/23  |RLCA RRCA RLA RRA, Z siempre a 0                          |
-	|cbrot    |  35  |[x] 35/35  |CB RLC r/(HL), CB RL r/(HL)                               |
+	|cbrot    |  68  |[x] 68/68  |CB RLC, RRC, RL, RR con r/(HL)                            |
 	|swap     |  20  |[x] 20/20  |CB SWAP r/(HL)                                            |
+	|cbshift  |  54  |[x] 54/54  |CB SLA, SRA (conserva signo), SRL con r/(HL)              |
 
 
 4.- HALLAZGOS
@@ -240,16 +245,35 @@ Leyenda:
 	H8  [COSMETICO][PARCIAL] Comentarios de load_SWAP_n_cb_block corregidos. Sigue abierto:
 	    load_ld_block imprime "Instruccion HALT detectada" cada vez que se construye una CPU.
 
-	H9  [ALTO][ABIERTO] src/MemoryBus.cpp: read(0xFF0F) devuelve el miembro IF, pero write(0xFF0F)
+	H9  [ALTO][CERRADO 14/10/2026] src/MemoryBus.cpp: read(0xFF0F) devuelve el miembro IF, pero write(0xFF0F)
 	    cae en la rama de I/O y escribe io_registers[0x0F]. Consecuencias: al atender una
 	    interrupcion la CPU no limpia el bit en IF (suite interrupts, caso 6: FF0F=E1 en vez de
 	    E0) y un programa no puede pedir ni cancelar interrupciones con LDH (FF0F),A.
 	    Correccion propuesta: en BUS::write, si address == 0xFF0F, IF = value (antes de la rama I/O).
+	    Corregido 14/10/2026: BUS::write guarda IF = value & 0x1F. Suite interrupts 11/11.
 
 	H10 [MEDIO][ABIERTO] src/MemoryBus.cpp, BUS::read: la rama 0xFE00-0xFEFF lee oam[address - 0xFE00],
 	    pero oam tiene 160 bytes. Leer 0xFEA0-0xFEFF se sale del array (comportamiento indefinido).
 	    write ya ignora esa zona. Correccion propuesta: limitar la rama de lectura a 0xFE9F y
 	    devolver 0x00/0xFF para 0xFEA0-0xFEFF. Sin suite: no se prueba un acceso fuera de rango.
+
+	--- 4.4 Prefijo CB: RRC, RR, SLA, SRA, SRL (14/10/2026) ---
+	Archivos: src/cpuinstructionsCB/CPU_ROTATES_CB_Opcodes.cpp (RLC, RL, RRC, RR),
+	          src/cpuinstructionsCB/CPU_SHIFT_CB_Opcodes.cpp (SLA, SRA, SRL),
+	          src/cpuinstructionsCB/CPU_SWAP_CB_Opcodes.cpp (renombrado, sin cambios),
+	          utils/OpcodesLoaders.cpp (load_ROTATES_CB_block, load_SHIFT_CB_block), src/CPU.cpp.
+	Logica revisada contra Pan Docs: correcta (Z00C, SRA conserva el bit 7, SRL mete 0, 2/4 M-cycles).
+
+	N1  [ALTO][CERRADO] op_RR_n implementado pero CB 18-1F sin registrar (exit(1) al ejecutarlo).
+	    Verificado 14/10/2026: registrados en load_ROTATES_CB_block; suite cbrot casos 52-68.
+
+	N2  [ALTO][CERRADO] op_cb_prefix_handler devolvia (this->*funcion_cb)() + 1. Las ops CB ya
+	    devuelven el TOTAL de la instruccion con el prefijo incluido (Pan Docs: CB r = 2 M,
+	    CB (HL) = 4 M, BIT n,(HL) = 3 M), asi que el prefijo se contaba dos veces (3/5).
+	    Corregido 14/10/2026 quitando el +1. Regla para BIT/RES/SET: devolver el total
+	    (BIT r = 2, BIT (HL) = 3, RES/SET r = 2, RES/SET (HL) = 4).
+
+	N3  [COSMETICO][CERRADO] comentarios de SRA en load_SHIFT_CB_block decian "SLA".
 
 
 5.- PENDIENTES
@@ -262,7 +286,7 @@ Leyenda:
 	[x] ADC A,D / E / H / L (8A-8D) con caso individual en add (13/10/2026).
 	[x] Exponer CPU::MCycles en CPUTestProbe y validar M-cycles por paso (13/10/2026, suites nuevas).
 	[ ] Anadir .cycles() a las suites anteriores (ld, inc, dec, add, sub, ...).
-	[ ] Corregir H9 y anadir a interrupts: prioridad entre interrupciones y peticion por LDH (FF0F),A.
+	[x] H9 corregido; interrupts cubre peticion por LDH (FF0F),A y prioridad (14/10/2026).
 	[x] B9 corregido: suite boot creada y precondicion Start::Zero en el resto.
 	[x] B13 corregido (bios_mapped=false). Falta un caso en boot que lea un byte no nulo de 0000-00FF
 	    (el arnes solo coloca bytes en 0100 y 0180).
@@ -274,7 +298,7 @@ Leyenda:
 	[x] RLCA RRCA RLA RRA (07 0F 17 1F)
 	[x] HALT (76), STOP (10), DI (F3), EI (FB)
 	[x] Prefijo CB: SWAP (30-37), RLC (00-07), RL (10-17)
-	[ ] Prefijo CB: RRC (08-0F), RR (18-1F), SLA (20-27), SRA (28-2F), SRL (38-3F)
+	[x] Prefijo CB: RRC (08-0F), RR (18-1F), SLA (20-27), SRA (28-2F), SRL (38-3F)
 	[ ] Prefijo CB: BIT (40-7F), RES (80-BF), SET (C0-FF)
 
 

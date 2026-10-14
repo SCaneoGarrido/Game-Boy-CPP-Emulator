@@ -287,6 +287,9 @@ void OpcodeLoaders::load_SWAP_n_cb_block(CPU &cpu) {
   cpu.opcode_table_cb[0x36] = &CPU::op_cb_swap_n<nullptr, true>;  // SWAP HL
 }
 void OpcodeLoaders::load_MISSCELLANEOUS_block(CPU &cpu) {
+   // ===========================================================================
+  // 1. CARGA DE Opcodes Especiales
+  // ===========================================================================
   cpu.opcode_table[0x27] = &CPU::op_DAA;
   cpu.opcode_table[0x2F] = &CPU::op_CPL;
   cpu.opcode_table[0x3F] = &CPU::op_CCF;
@@ -299,6 +302,9 @@ void OpcodeLoaders::load_MISSCELLANEOUS_block(CPU &cpu) {
 }
 
 void OpcodeLoaders::load_ROTATES_block(CPU &cpu) {
+   // ===========================================================================
+  // 1. CARGA DE ROTATES de la tabla comun
+  // ===========================================================================
   cpu.opcode_table[0x07] = &CPU::op_RLCA;
   cpu.opcode_table[0x17] = &CPU::op_RLA;
   cpu.opcode_table[0x0F] = &CPU::op_RRCA;
@@ -306,6 +312,9 @@ void OpcodeLoaders::load_ROTATES_block(CPU &cpu) {
 }
 
 void OpcodeLoaders::load_ROTATES_CB_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE RL n
+  // ===========================================================================
   cpu.opcode_table_cb[0x17] = &CPU::op_RL_n<&CPU::A, false>; // RL A
   cpu.opcode_table_cb[0x10] = &CPU::op_RL_n<&CPU::B, false>; // RL B
   cpu.opcode_table_cb[0x11] = &CPU::op_RL_n<&CPU::C, false>; // RL C
@@ -314,7 +323,9 @@ void OpcodeLoaders::load_ROTATES_CB_block(CPU &cpu) {
   cpu.opcode_table_cb[0x14] = &CPU::op_RL_n<&CPU::H, false>; // RL H
   cpu.opcode_table_cb[0x15] = &CPU::op_RL_n<&CPU::L, false>; // RL L
   cpu.opcode_table_cb[0x16] = &CPU::op_RL_n<nullptr, true>; // RL (HL)
-
+  // ===========================================================================
+  // 2. CARGA DE RLC n
+  // ===========================================================================
   cpu.opcode_table_cb[0x07] = &CPU::op_RLC_n<&CPU::A, false>; // RLC A
   cpu.opcode_table_cb[0x00] = &CPU::op_RLC_n<&CPU::B, false>; // RLC B
   cpu.opcode_table_cb[0x01] = &CPU::op_RLC_n<&CPU::C, false>; // RLC C
@@ -323,4 +334,65 @@ void OpcodeLoaders::load_ROTATES_CB_block(CPU &cpu) {
   cpu.opcode_table_cb[0x04] = &CPU::op_RLC_n<&CPU::H, false>; // RLC H
   cpu.opcode_table_cb[0x05] = &CPU::op_RLC_n<&CPU::L, false>; // RLC L
   cpu.opcode_table_cb[0x06] = &CPU::op_RLC_n<nullptr, true>; // RLC (HL)
+  // ===========================================================================
+  // 3. CARGA DE RRC n
+  // ===========================================================================
+  cpu.opcode_table_cb[0x0F] = &CPU::op_RRC_n<&CPU::A, false>; // RRC A
+  cpu.opcode_table_cb[0x08] = &CPU::op_RRC_n<&CPU::B, false>; // RRC B
+  cpu.opcode_table_cb[0x09] = &CPU::op_RRC_n<&CPU::C, false>; // RRC C
+  cpu.opcode_table_cb[0x0A] = &CPU::op_RRC_n<&CPU::D, false>; // RRC D
+  cpu.opcode_table_cb[0x0B] = &CPU::op_RRC_n<&CPU::E, false>; // RRC E
+  cpu.opcode_table_cb[0x0C] = &CPU::op_RRC_n<&CPU::H, false>; // RRC H
+  cpu.opcode_table_cb[0x0D] = &CPU::op_RRC_n<&CPU::L, false>; // RRC L
+  cpu.opcode_table_cb[0x0E] = &CPU::op_RRC_n<nullptr, true>;  // RRC (HL)
+  // ===========================================================================
+  // 4. CARGA DE RR n
+  // ===========================================================================
+  cpu.opcode_table_cb[0x1F] = &CPU::op_RR_n<&CPU::A, false>; // RR A
+  cpu.opcode_table_cb[0x18] = &CPU::op_RR_n<&CPU::B, false>; // RR B
+  cpu.opcode_table_cb[0x19] = &CPU::op_RR_n<&CPU::C, false>; // RR C
+  cpu.opcode_table_cb[0x1A] = &CPU::op_RR_n<&CPU::D, false>; // RR D
+  cpu.opcode_table_cb[0x1B] = &CPU::op_RR_n<&CPU::E, false>; // RR E
+  cpu.opcode_table_cb[0x1C] = &CPU::op_RR_n<&CPU::H, false>; // RR H
+  cpu.opcode_table_cb[0x1D] = &CPU::op_RR_n<&CPU::L, false>; // RR L
+  cpu.opcode_table_cb[0x1E] = &CPU::op_RR_n<nullptr, true>;  // RR (HL)
+
 }
+
+void OpcodeLoaders::load_SHIFT_CB_block(CPU &cpu) {
+  // ===========================================================================
+  // 1. CARGA DE SLA n
+  // ===========================================================================
+  cpu.opcode_table_cb[0x27] = &CPU::op_SLA_n<&CPU::A, false>; // SLA A
+  cpu.opcode_table_cb[0x20] = &CPU::op_SLA_n<&CPU::B, false>; // SLA B
+  cpu.opcode_table_cb[0x21] = &CPU::op_SLA_n<&CPU::C, false>; // SLA C
+  cpu.opcode_table_cb[0x22] = &CPU::op_SLA_n<&CPU::D, false>; // SLA D
+  cpu.opcode_table_cb[0x23] = &CPU::op_SLA_n<&CPU::E, false>; // SLA E
+  cpu.opcode_table_cb[0x24] = &CPU::op_SLA_n<&CPU::H, false>; // SLA H
+  cpu.opcode_table_cb[0x25] = &CPU::op_SLA_n<&CPU::L, false>; // SLA L
+  cpu.opcode_table_cb[0x26] = &CPU::op_SLA_n<nullptr, true>;  // SLA (HL)
+  // ===========================================================================
+  // 2. CARGA DE SRA n
+  // ===========================================================================
+  cpu.opcode_table_cb[0x2F] = &CPU::op_SRA_n<&CPU::A, false>; // SRA A
+  cpu.opcode_table_cb[0x28] = &CPU::op_SRA_n<&CPU::B, false>; // SRA B
+  cpu.opcode_table_cb[0x29] = &CPU::op_SRA_n<&CPU::C, false>; // SRA C
+  cpu.opcode_table_cb[0x2A] = &CPU::op_SRA_n<&CPU::D, false>; // SRA D
+  cpu.opcode_table_cb[0x2B] = &CPU::op_SRA_n<&CPU::E, false>; // SRA E
+  cpu.opcode_table_cb[0x2C] = &CPU::op_SRA_n<&CPU::H, false>; // SRA H
+  cpu.opcode_table_cb[0x2D] = &CPU::op_SRA_n<&CPU::L, false>; // SRA L
+  cpu.opcode_table_cb[0x2E] = &CPU::op_SRA_n<nullptr, true>;  // SRA (HL)
+  // ===========================================================================
+  // 3. CARGA DE SRL n
+  // ===========================================================================
+  cpu.opcode_table_cb[0x3F] = &CPU::op_SRL_n<&CPU::A, false>; // SRL A
+  cpu.opcode_table_cb[0x38] = &CPU::op_SRL_n<&CPU::B, false>; // SRL B
+  cpu.opcode_table_cb[0x39] = &CPU::op_SRL_n<&CPU::C, false>; // SRL C
+  cpu.opcode_table_cb[0x3A] = &CPU::op_SRL_n<&CPU::D, false>; // SRL D
+  cpu.opcode_table_cb[0x3B] = &CPU::op_SRL_n<&CPU::E, false>; // SRL E
+  cpu.opcode_table_cb[0x3C] = &CPU::op_SRL_n<&CPU::H, false>; // SRL H
+  cpu.opcode_table_cb[0x3D] = &CPU::op_SRL_n<&CPU::L, false>; // SRL L
+  cpu.opcode_table_cb[0x3E] = &CPU::op_SRL_n<nullptr, true>;  // SRL (HL)
+
+}
+

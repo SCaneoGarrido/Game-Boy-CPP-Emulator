@@ -3,7 +3,7 @@ Suite:      Prefijo CB: SWAP r
 Opcodes:    CB 30-37
 Flags:      Z 0 0 0
 Test:       testing/swap/test_swap.cpp (20 pasos)
-Estado:     13/10/2026 -> 20/20 OK
+Estado:     14/10/2026 -> 20/20 OK
 
 Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
          Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
@@ -40,5 +40,5 @@ Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no regi
 	[x] 20. SWAP (HL) 00 -> 00 Z               -> (C000)=00  F=80 (Z---)  PC=0128  M=4
 
 3.- NOTAS Y HALLAZGOS RELACIONADOS
-	* Ninguno abierto.
+	* N2 [CERRADO 14/10/2026] los M-cycles fallaban (3/5) por el +1 del handler CB.
 	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

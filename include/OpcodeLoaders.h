@@ -21,6 +21,7 @@ namespace OpcodeLoaders {
   // Opcode Rotates & Shift
   void load_ROTATES_block(CPU& cpu);
   void load_ROTATES_CB_block(CPU& cpu);
+  void load_SHIFT_CB_block(CPU& cpu);
 }
 
 

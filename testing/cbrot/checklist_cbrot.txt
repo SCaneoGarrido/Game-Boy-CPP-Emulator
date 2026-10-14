@@ -1,9 +1,9 @@
 ============================== CHECKLIST SUITE cbrot ==============================
-Suite:      Prefijo CB: RLC r y RL r
-Opcodes:    CB 00-07, CB 10-17
+Suite:      Prefijo CB: RLC r, RRC r, RL r y RR r
+Opcodes:    CB 00-07, CB 08-0F, CB 10-17, CB 18-1F
 Flags:      Z 0 0 C
-Test:       testing/cbrot/test_cbrot.cpp (35 pasos)
-Estado:     13/10/2026 -> 35/35 OK
+Test:       testing/cbrot/test_cbrot.cpp (68 pasos)
+Estado:     14/10/2026 -> 68/68 OK
 
 Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
          Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
@@ -15,7 +15,7 @@ Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no regi
 	./build/testing/test_cbrot -v     -> ademas, traza de CPU/BUS y showCPUINFO()
 	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
 	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
-	Sin datos. (HL)=C000 (WRAM).
+	Sin datos. (HL)=C000 (WRAM). El codigo pasa de 0180 (no hay datos en esta suite).
 
 2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
 	[x]  1. LD B,85                            -> B=85  PC=0102
@@ -53,9 +53,42 @@ Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no regi
 	[x] 33. LD (HL),7F                         -> (C000)=7F  PC=0144
 	[x] 34. RL (HL)   7F,C=1 -> FF             -> (C000)=FF  F=00 (----)  PC=0146  M=4
 	[x] 35. RL (HL)   FF,C=0 -> FE C           -> (C000)=FE  F=10 (---C)  PC=0148  M=4
+	[x] 36. LD B,01                            -> B=01  PC=014A
+	[x] 37. RRC B     01 -> 80 C               -> B=80  F=10 (---C)  PC=014C  M=2
+	[x] 38. LD C,00                            -> C=00  PC=014E
+	[x] 39. RRC C     00 -> 00 Z               -> C=00  F=80 (Z---)  PC=0150  M=2
+	[x] 40. LD D,02                            -> D=02  PC=0152
+	[x] 41. RRC D     02 -> 01                 -> D=01  F=00 (----)  PC=0154  M=2
+	[x] 42. LD E,FF                            -> E=FF  PC=0156
+	[x] 43. RRC E     FF -> FF C               -> E=FF  F=10 (---C)  PC=0158  M=2
+	[x] 44. LD A,81                            -> A=81  PC=015A
+	[x] 45. RRC A     81 -> C0 C               -> A=C0  F=10 (---C)  PC=015C  M=2
+	[x] 46. LD (HL),03                         -> (C000)=03  PC=015E
+	[x] 47. RRC (HL)  03 -> 81 C               -> (C000)=81  F=10 (---C)  PC=0160  M=4
+	[x] 48. LD H,10                            -> H=10  PC=0162
+	[x] 49. RRC H     10 -> 08                 -> H=08  F=00 (----)  PC=0164  M=2
+	[x] 50. LD L,20                            -> L=20  PC=0166
+	[x] 51. RRC L     20 -> 10                 -> L=10  F=00 (----)  PC=0168  M=2
+	[x] 52. LD B,01                            -> B=01  PC=016A
+	[x] 53. RR B      01,C=0 -> 00 Z C         -> B=00  F=90 (Z--C)  PC=016C  M=2
+	[x] 54. LD C,00                            -> C=00  PC=016E
+	[x] 55. RR C      00,C=1 -> 80             -> C=80  F=00 (----)  PC=0170  M=2
+	[x] 56. LD D,81                            -> D=81  PC=0172
+	[x] 57. RR D      81,C=0 -> 40 C           -> D=40  F=10 (---C)  PC=0174  M=2
+	[x] 58. LD E,02                            -> E=02  PC=0176
+	[x] 59. RR E      02,C=1 -> 81             -> E=81  F=00 (----)  PC=0178  M=2
+	[x] 60. LD A,01                            -> A=01  PC=017A
+	[x] 61. RR A      01,C=0 -> 00 Z C         -> A=00  F=90 (Z--C)  PC=017C  M=2
+	[x] 62. LD H,F0                            -> H=F0  PC=017E
+	[x] 63. RR H      F0,C=1 -> F8             -> H=F8  F=00 (----)  PC=0180  M=2
+	[x] 64. LD L,0F                            -> L=0F  PC=0182
+	[x] 65. RR L      0F,C=0 -> 07 C           -> L=07  F=10 (---C)  PC=0184  M=2
+	[x] 66. LD HL,C000                         -> HL=C000  PC=0187
+	[x] 67. RR (HL)   81,C=1 -> C0 C           -> (C000)=C0  F=10 (---C)  PC=0189  M=4
+	[x] 68. RR (HL)   C0,C=1 -> E0             -> (C000)=E0  F=00 (----)  PC=018B  M=4
 
 3.- NOTAS Y HALLAZGOS RELACIONADOS
-	* H2 [CERRADO 13/10/2026] load_ROTATES_CB_block no se llamaba desde loadOpcodes().
-	* H3 [CERRADO 13/10/2026] CB 06 y CB 16 se registraban sobre A en vez de (HL): casos 17, 34 y 35.
-	* Pendiente en el prefijo CB: RRC, RR, SLA, SRA, SRL, BIT, RES, SET.
+	* H2/H3 [CERRADOS 13/10/2026] loaders y registro de (HL).
+	* N1 [CERRADO 14/10/2026] RR (CB 18-1F) estaba implementado pero sin registrar: casos 52-68.
+	* N2 [CERRADO 14/10/2026] op_cb_prefix_handler sumaba +1 a ciclos que ya incluyen el prefijo (CB r = 3, CB (HL) = 5). Quitado el +1: 2 y 4 M-cycles.
 	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt

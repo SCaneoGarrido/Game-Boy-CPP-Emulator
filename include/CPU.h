@@ -103,6 +103,16 @@ private:
   int op_RLC_n();
   template<std::uint8_t CPU::*registro, bool hl_modified>
   int op_RL_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_RRC_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_RR_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_SLA_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_SRA_n();
+  template<std::uint8_t CPU::*registro, bool hl_modified>
+  int op_SRL_n();
   // ============================== CPU MISCELLANEOUS INSTRUCTIONS =============================================
   int op_DAA();
   int op_CPL();
@@ -136,6 +146,7 @@ private:
   friend void OpcodeLoaders::load_MISSCELLANEOUS_block(CPU &cpu);
   friend void OpcodeLoaders::load_ROTATES_block(CPU &cpu);
   friend void OpcodeLoaders::load_ROTATES_CB_block(CPU &cpu);
+  friend void OpcodeLoaders::load_SHIFT_CB_block(CPU &cpu);
   friend class CPUTestProbe;
 public:
   void loadOpcodes();

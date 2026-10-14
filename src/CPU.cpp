@@ -122,6 +122,7 @@ int CPU::op_cb_prefix_handler() {
 
     InstructionFunc funcion_cb = opcode_table_cb[cb_opcode];
     
+    // Cada op CB devuelve el total de la instruccion (prefijo incluido): 2 o 4 M-cycles
     return (this->*funcion_cb)();
 }
 void CPU::push16(std::uint16_t value) {
@@ -158,6 +159,7 @@ void CPU::loadOpcodes() {
   OpcodeLoaders::load_MISSCELLANEOUS_block(*this);
   OpcodeLoaders::load_ROTATES_block(*this);
   OpcodeLoaders::load_ROTATES_CB_block(*this);
+  OpcodeLoaders::load_SHIFT_CB_block(*this);
 }
 
 int CPU::b_illegal_opcode() {

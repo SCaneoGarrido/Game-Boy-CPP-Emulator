@@ -169,3 +169,80 @@ si !bandera_n {
 
 bandera_z = (A == 0);
 bandera_h = 0;
+======================================= RRC ======================================================
+registro_n = 1100 1010
+bit0 = registro_n & 1;
+registro_n (registro_n >> 1) & 0xFF
+registro_n = registro_n | (bit0 << 7)
+===================================== RR n =======================================================
+registro_n = 1100 1010
+bit0 = registro_n & 1;
+actualValorFlagC = getFlag(FLAG_C) ? 1 : 0;
+registro_n = (registro_n >> 1) & 0xFF;
+registro_n = registro_n | (actualValorFlagC << 7);
+
+si registro_n es igual a 0
+  setFlag(FLAG_Z)
+sino 
+  clearFlag(FLAG_Z)
+
+si bit0 es igual a 1
+  setFlag(FLAG_C);
+si bit0 es igual a 0
+  clearFlag(FLAG_C);
+
+clearFlag(FLAG_H);
+clearFlag(FLAG_N);
+===================================== SLA n =======================================================
+registro_n = 1100 1010
+bit7 = (registro_n >> 7) & 1;
+registro_n = (registro_n << 1) & 0xFF;
+
+clearFlag(FLAG_H);
+clearFlag(FLAG_N);
+
+si registro_n es igual a 0
+  setFlag(FLAG_Z);
+sino 
+  clearFlag(FLAG_Z);
+
+si bit7 es igual a 1
+  setFlag(FLAG_C);
+si bit7 es igual a 0
+  clearFlag(FLAG_C);
+===================================== SRA n =======================================================
+registro_n = 1100 1010
+bit0 = registro_n & 1;
+bit7 = (registro_n >> 7) & 1;
+registro_n = (registro_n >> 1) & 0xFF;
+registro_n = registro_n | (bit7 << 7);
+clearFlag(FLAG_H);
+clearFlag(FLAG_N);
+
+si registro_n es igual a 0
+  setFlag(FLAG_Z);
+sino 
+  clearFlag(FLAG_Z);
+
+si bit0 es igual a 1
+  setFlag(FLAG_C);
+si bit0 es igual a 0
+  clearFlag(FLAG_C);
+===================================== SRL n =======================================================
+registro_n = 1100 1010
+bit0 = registro_n & 1;
+registro_n = (registro_n >> 1) & 0xFF;
+
+clearFlag(FLAG_H);
+clearFlag(FLAG_N);
+
+si registro_n es igual a 0
+  setFlag(FLAG_Z);
+sino 
+  clearFlag(FLAG_Z);
+
+si bit0 es igual a 1
+  setFlag(FLAG_C);
+si bit0 es igual a 0
+  clearFlag(FLAG_C);
+

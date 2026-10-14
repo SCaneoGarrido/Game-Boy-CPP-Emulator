@@ -1,9 +1,9 @@
 ============================== CHECKLIST SUITE interrupts ==============================
-Suite:      Atencion de interrupciones (V-Blank) en CPU::cpuCycle
-Opcodes:    EA FB 00 (apoyo) + despacho a 0040
-Flags:      Ninguno
-Test:       testing/interrupts/test_interrupts.cpp (7 pasos)
-Estado:     13/10/2026 -> 6/7 FALLA
+Suite:      Peticion y atencion de interrupciones en CPU::cpuCycle
+Opcodes:    E0 (LDH a IF), EA (IE), FB, 00 + despacho a 0040
+Flags:      Ninguno (XOR A como apoyo)
+Test:       testing/interrupts/test_interrupts.cpp (11 pasos)
+Estado:     14/10/2026 -> 11/11 OK
 
 Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no registrado)
          Flags ZNHC -> F = Z(80) N(40) H(20) C(10)
@@ -15,18 +15,23 @@ Leyenda: [x] PASS   [!] FAIL (valor distinto)   [-] no ejecutado (opcode no regi
 	./build/testing/test_interrupts -v     -> ademas, traza de CPU/BUS y showCPUINFO()
 	Estado inicial: Start::Zero -> A..L=00 F=00 SP=0000 PC=0100, memoria a 0. Codigo en 0100.
 	(precondicion fijada por el arnes; no depende del estado post-boot de la CPU)
-	Sin datos. IF arranca en E1 (V-Blank pendiente). El vector 0040 cae en ROM a cero (NOP).
+	Sin datos. IF arranca en E1; el paso 3 lo pone a 00. Al leer FF0F los bits 5-7 valen 1. El vector 0040 cae en ROM a cero (NOP).
 
 2.- CASOS (estado esperado DESPUES de cada instruccion; solo se comparan los campos listados)
 	[x]  1. LD SP,FFFE                         -> SP=FFFE  PC=0103
-	[x]  2. LD A,01                            -> A=01  PC=0105
-	[x]  3. LD (FFFF),A  IE=01, IME=0 -> no se atiende -> IME=0  PC=0108
-	[x]  4. EI           IME aun 0             -> IME=0  PC=0109
-	[x]  5. NOP          IME=1, aun sin atender -> IME=1  PC=010A
-	[!]  6. V-Blank      PUSH 010A, PC=0040, IF bit0=0 -> IME=0  SP=FFFC  (FFFD)=01  (FFFC)=0A  (FF0F)=E0  PC=0040  M=5
-	[x]  7. NOP en 0040  IME=0 -> no se vuelve a atender -> IME=0  SP=FFFC  PC=0041
+	[x]  2. XOR A                              -> A=00  F=80 (Z---)  PC=0104
+	[x]  3. LDH (0F),A   IF=00                 -> (FF0F)=E0  PC=0106
+	[x]  4. LD A,1F                            -> A=1F  PC=0108
+	[x]  5. LD (FFFF),A  IE=1F, nada pendiente -> IME=0  PC=010B
+	[x]  6. LD A,05                            -> A=05  PC=010D
+	[x]  7. LDH (0F),A   IF=05, IME=0          -> (FF0F)=E5  IME=0  PC=010F
+	[x]  8. EI           IME aun 0             -> IME=0  PC=0110
+	[x]  9. NOP          IME=1, aun sin atender -> IME=1  PC=0111
+	[x] 10. V-Blank      prioridad sobre Timer -> IME=0  SP=FFFC  (FFFD)=01  (FFFC)=11  (FF0F)=E4  PC=0040  M=5
+	[x] 11. NOP en 0040  IME=0 -> Timer sigue pendiente -> IME=0  SP=FFFC  (FF0F)=E4  PC=0041
 
 3.- NOTAS Y HALLAZGOS RELACIONADOS
-	* H9 [ABIERTO] BUS: read(FF0F) devuelve el miembro IF, pero write(FF0F) escribe en io_registers[0x0F]. Ni la CPU (al atender una interrupcion) ni un LDH (FF0F),A pueden cambiar IF: el bit atendido nunca se limpia (caso 6) y no se pueden pedir otras interrupciones.
-	* Sin cubrir: prioridad entre interrupciones (requiere H9), RETI y la vuelta del handler (RET/RETI sin implementar).
+	* H9 [CERRADO 14/10/2026] BUS::write(FF0F) ahora actualiza IF: se piden interrupciones con LDH (0F),A (pasos 3 y 7) y la CPU limpia el bit atendido (paso 10).
+	* Prioridad: con IF=05 (Timer + V-Blank) se atiende primero V-Blank y Timer queda pendiente (pasos 10 y 11).
+	* Sin cubrir: RETI y la vuelta del handler (RET/RETI sin implementar).
 	* Detalle global: doc/opcodes_mapping/checklist_test_GB_emulator_26092026.txt
